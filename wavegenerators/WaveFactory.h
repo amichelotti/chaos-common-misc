@@ -14,7 +14,6 @@ namespace common {
     namespace misc {
         namespace wavegenerators {
             
-            typedef  boost::shared_ptr<WaveBase> WaveBase_t;
 class WaveFactory {
 public:
     WaveFactory();

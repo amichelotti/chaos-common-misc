@@ -9,6 +9,7 @@
 #define	WAVEBASE_H
 #include <string>
 #include <stdint.h>
+#include <boost/shared_ptr.hpp>
 namespace common {
     namespace misc {
         namespace wavegenerators {
@@ -58,8 +59,13 @@ namespace common {
                 uint64_t tim;
 
             };
+            
+            typedef  boost::shared_ptr<WaveBase> WaveBase_t;
+
+            
         }
     }
+
 }
 #endif	/* WAVEBASE_H */
 
