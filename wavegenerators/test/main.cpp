@@ -5,6 +5,8 @@
 #include <boost/regex.h>
 #include <common/misc/wavegenerators/WaveFactory.h>
 
+#include "WaveFactory.h"
+
 
 
 int main(int argc, char *argv[])
@@ -13,8 +15,8 @@ int main(int argc, char *argv[])
   int samples=10;
   boost::program_options::options_description desc("options");
   desc.add_options()("help", "help");
-  desc.add_options()("wave", boost::program_options::value<std::string>(wave),"the wavegenerator string one the format:<wavegenerator class>:<wave generator initialization>,i.e RndWave:0.10:20.2 generates random numbers from .10 to 20.2");
-  desc.add_options()("samples", boost::program_options::value<int>(samples)->default(10),"number of samples to create");
+  desc.add_options()("wave", boost::program_options::value<std::string>(&wave),"the wavegenerator string one the format:<wavegenerator class>:<wave generator initialization>,i.e RndWave:0.10:20.2 generates random numbers from .10 to 20.2");
+  desc.add_options()("samples", boost::program_options::value<int>(&samples)->default_value(10),"number of samples to create");
   // put your additional options here
 
   //////
@@ -31,12 +33,12 @@ int main(int argc, char *argv[])
     return -1;
   }
   try {
-  common::misc::wavegenerators::WaveBase* wav=common::misc::wavegenerators::WaveFactory(wave);
+  common::misc::wavegenerators::WaveBase_t wav=common::misc::wavegenerators::WaveFactory::getGenerator(wave);
   while(samples--){
     std::cout<<wav->generate()<<std::endl;
   }
   } catch(std::exception e){
-    std::cerr<<"## error: "<< e.what();
+    std::cerr<<"## error: "<< e.what()<<std::endl;
     return -2;
   }
   return 0;

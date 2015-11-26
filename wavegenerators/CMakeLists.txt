@@ -30,7 +30,10 @@ ADD_LIBRARY(common_misc_wavegenerators SHARED ${src})
 ENDIF()
 
 
-
+ADD_EXECUTABLE(wave_test test/main.cpp)
+TARGET_LINK_LIBRARIES(wave_test common_misc_wavegenerators boost_program_options boost_regex)
 INSTALL_TARGETS(/lib  common_misc_wavegenerators)
+INSTALL_TARGETS(/bin  wave_test)
+
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/wavegenerators)

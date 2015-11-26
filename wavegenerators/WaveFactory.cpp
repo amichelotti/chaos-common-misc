@@ -9,6 +9,7 @@
 #include "RndWave.h"
 #include <exception>
 #include <stdexcept>
+#include <boost/regex.hpp>
 using namespace common::misc::wavegenerators;
 static boost::regex drv_opt("([a-zA-Z]+):(.+)");
 #define ADD_GENERATOR(c,g,par) {		\
@@ -25,12 +26,12 @@ WaveFactory::WaveFactory() {
      std::string gen,par;
      gen=match[1];
      par=match[2];
-     ADD_GENERATOR(RndWave,gen,params);
+     ADD_GENERATOR(RndWave,gen,par);
    } else {
      throw std::logic_error("bad format for getting generator:\""+params+"\" expected <generator class>:<class initializer>");
    }
 
-   throw std::logic_error("no generator found:\"" + gen+"\"");
+   throw std::logic_error("no generator found:\"" + params+"\"");
  }
 
 WaveFactory::WaveFactory(const WaveFactory& orig) {

@@ -47,7 +47,7 @@ void RndWave::reset(){
   
 double RndWave::generate(){
     double ret;
-    ret = min + ((rand()*max)/RAND_MAX);
+    ret = min + ((rand()*(max-min))/RAND_MAX);
     return ret;
 }
     
