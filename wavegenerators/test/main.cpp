@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 #include <boost/regex.h>
 #include <common/misc/wavegenerators/WaveFactory.h>
-
+#include <iostream>
 #include "WaveFactory.h"
 
 

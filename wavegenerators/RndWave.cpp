@@ -10,7 +10,7 @@
 #include <string>
 #include <stdlib.h>
 using namespace common::misc::wavegenerators;
-static boost::regex params("([\\.\\d]+):([\\.\\d]+)");
+static boost::regex params("([-\\.\\d]+):([-\\.\\d]+)");
 
 RndWave::RndWave() {
     max=min=0;
