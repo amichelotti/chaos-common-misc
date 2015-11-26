@@ -20,7 +20,7 @@ public:
     WaveFactory(const WaveFactory& orig);
     virtual ~WaveFactory();
     
-    static WaveBase_t getGenerator(const std::string& gen, const std::string& params); 
+    static WaveBase_t getGenerator(const std::string& params); 
 private:
 
 };
