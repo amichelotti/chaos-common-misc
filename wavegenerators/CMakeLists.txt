@@ -31,7 +31,7 @@ ENDIF()
 
 
 ADD_EXECUTABLE(wave_test test/main.cpp)
-TARGET_LINK_LIBRARIES(wave_test common_misc_wavegenerators boost_program_options boost_regex)
+TARGET_LINK_LIBRARIES(wave_test common_misc_wavegenerators boost_program_options boost_regex pthread)
 INSTALL_TARGETS(/lib  common_misc_wavegenerators)
 INSTALL_TARGETS(/bin  wave_test)
 
