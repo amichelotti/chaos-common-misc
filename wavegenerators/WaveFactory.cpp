@@ -9,8 +9,10 @@
 #include "RndWave.h"
 #include <exception>
 #include <stdexcept>
+#include <boost/regex.hpp>
 using namespace common::misc::wavegenerators;
-#define ADD_GENERATOR(c,g,par) {\
+static boost::regex drv_opt("([a-zA-Z]+):(.+)");
+#define ADD_GENERATOR(c,g,par) {		\
 WaveBase* p =new c ();\
 if (p->init(par)!=0) throw std::logic_error("bad parameters for generator:"+p->infoParams() );\
 if ( # c == g)return WaveBase_t(p); }
@@ -18,9 +20,18 @@ if ( # c == g)return WaveBase_t(p); }
 WaveFactory::WaveFactory() {
 }
 
- WaveBase_t WaveFactory::getGenerator(const std::string& gen, const std::string& params){
-     ADD_GENERATOR(RndWave,gen,params);
-     throw std::logic_error("no generator found:\"" + gen+"\"");
+ WaveBase_t WaveFactory::getGenerator(const std::string& params){
+   boost::smatch match;
+   if(boost::regex_match(params,match,drv_opt,boost::match_extra)){
+     std::string gen,par;
+     gen=match[1];
+     par=match[2];
+     ADD_GENERATOR(RndWave,gen,par);
+   } else {
+     throw std::logic_error("bad format for getting generator:\""+params+"\" expected <generator class>:<class initializer>");
+   }
+
+   throw std::logic_error("no generator found:\"" + params+"\"");
  }
 
 WaveFactory::WaveFactory(const WaveFactory& orig) {
