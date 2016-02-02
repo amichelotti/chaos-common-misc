@@ -1,5 +1,5 @@
 #include <stdio.h>
-int beagle_configure_pio(int pion,int dir){
+int beagle_pio_configure(int pion,int dir){
   char str[256];
   FILE *f=fopen("/sys/class/gpio/export","w");
   if(f==NULL){

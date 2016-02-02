@@ -19,14 +19,16 @@
  *    	See the License for the specific language governing permissions and
  *    	limitations under the License.
  */
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
    \brief configure a pio
    \param pion the pio number
    \param dir 0 is input, 1 is output
    \return 0 if success
 */
-int beagle_configure_pio(int pion,int dir);
+int beagle_pio_configure(int pion,int dir);
 /**
    \brief set a value of an output pio
    \param pion the pio number
@@ -41,4 +43,8 @@ int beagle_pio_set(int pion,int val);
    \return 0 if success
 */
 int beagle_pio_get(int pion,int *val);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
