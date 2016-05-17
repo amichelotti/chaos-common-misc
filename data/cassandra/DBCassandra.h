@@ -18,9 +18,13 @@ namespace data {
 class DBCassandra: public DBbase {
 	CassCluster* cluster;
 	CassSession* session;
-	const CassPrepared* prepared;
 
+	typedef std::map<std::string,const CassPrepared*> prepared_t;
+
+	prepared_t prepared;
 	void print_error(CassFuture* future);
+	const char* dataTypeToCassandra(dataTypes t);
+	CassError execStatement(CassStatement* statement);
 public:
 	DBCassandra();
 	virtual ~DBCassandra();
@@ -32,11 +36,13 @@ public:
 			 * */
 	int disconnect()=0;
 
-	int execute_query(const std::string& str);
-	int createDataSet(DataSet*);
+	int executeQuery(const std::string& str);
 
-	int insertDataSet(DataSet*);
-	std::vector<DataSet*> queryDataSet(int64_t startTime,int64_t endTime);
+	int pushData(const DataSet*ds,uint64_t ts);
+	int pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts);
+
+	int queryData(const DataSet& ds,datasetRecord_t& set ,int64_t startTime=0,int64_t endTime=-1);
+	int queryData(const std::string& tblname,const std::string& key,blobRecord_t& set,int64_t startTime=0,int64_t endTime=-1);
 };
 
 } /* namespace data */

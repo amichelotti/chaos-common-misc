@@ -11,22 +11,51 @@
 #include <vector>
 #include <map>
 #include <stdint.h>
+#include <common/debug/core/debug.h>
+#include <boost/shared_ptr.hpp>
 
 namespace common  {
 namespace misc {
 namespace data {
-class DataSet {
 
-protected:
-	struct dataset_ele{
+enum dataTypes {
+            TYPE_INT32 = 0,
+            //!Integer 64 bit length
+            TYPE_INT64,
+            //!Double 64 bit length
+            TYPE_DOUBLE,
+            //!C string variable length
+            TYPE_STRING,
+            //!byte array variable length
+            TYPE_BYTEARRAY,
+            //!bool variable length
+            TYPE_BOOLEAN,
+            TYPE_CLUSTER,
+            //!modifier to be ored to normal data types
+            TYPE_ACCESS_ARRAY=0x100,
+            TYPE_UNDEFINED
+};
+struct DatasetElement{
 		std::string name;
 		void* buffer;
 		int size;
-		int type;
-	};
+		dataTypes type;
+		DatasetElement(){buffer=NULL;size=0;type=TYPE_UNDEFINED;}
+		void resize(int size);
+		template<typename T>
+		operator T() {
+		        return *reinterpret_cast<T*>(buffer);
+		    }
+		~DatasetElement(){DPRINT("deleting dataset element %s",name.c_str());if(buffer)free(buffer);buffer=NULL;}
+};
 
-	std::vector<dataset_ele*> elems;
-	std::map<std::string, dataset_ele*> elem_by_name;
+class DataSet {
+public:
+	typedef boost::shared_ptr<DatasetElement> DatasetElement_psh;
+protected:
+
+	std::vector<DatasetElement_psh> elems;
+	std::map<std::string, DatasetElement_psh > elem_by_name;
 
 	std::string name;
 public:
@@ -35,11 +64,13 @@ public:
 	DataSet(std::string name);
 	virtual ~DataSet();
 	void setDataSetName(const std::string &_name){name=_name;}
-	int add(const std::string& name,int type);
+	void* add(const std::string& name,dataTypes type);
+	void* add(const std::string& name,dataTypes type,int size);
+
 	int set(int idx,void*ptr,int size);
 	int set(const std::string& name,void*ptr,int size);
-	std::string & getName(){return name;}
-
+	const std::string & getName() const {return name;}
+	const std::vector<DatasetElement_psh >& getDataSet() const {return elems;};
 };
 }
 }
