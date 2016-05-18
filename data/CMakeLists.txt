@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(common_misc_data)
-include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
-cmake_minimum_required(VERSION 2.6)
+ADD_DEFINITIONS(-DDEBUG)
 IF (DEFINED ENV{CHAOS_BUNDLE} )
   include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 ELSE()

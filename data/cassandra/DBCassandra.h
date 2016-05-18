@@ -26,7 +26,7 @@ class DBCassandra: public DBbase {
 	const char* dataTypeToCassandra(dataTypes t);
 	CassError execStatement(CassStatement* statement);
 public:
-	DBCassandra();
+	DBCassandra(std::string name);
 	virtual ~DBCassandra();
 
 	int connect();
@@ -34,15 +34,16 @@ public:
 			 * disconnects from database
 			 * @return 0 on success
 			 * */
-	int disconnect()=0;
+	int disconnect();
 
 	int executeQuery(const std::string& str);
 
-	int pushData(const DataSet*ds,uint64_t ts);
-	int pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts);
+	int pushData(const DataSet&ds,uint64_t ts=0);
+	int pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts=0);
 
 	int queryData(const DataSet& ds,datasetRecord_t& set ,int64_t startTime=0,int64_t endTime=-1);
 	int queryData(const std::string& tblname,const std::string& key,blobRecord_t& set,int64_t startTime=0,int64_t endTime=-1);
+	int dropData(const DataSet&);
 };
 
 } /* namespace data */

@@ -37,6 +37,8 @@ public:
 	 * @return 0 on success
 	 * */
 	virtual int addDBServer(std::string url);
+
+	int addDBServer(std::vector<std::string> urls);
 	/**
 		 * Set the database name
 		 * @param name database name
@@ -67,7 +69,7 @@ public:
 	 * @param ts the timestamp in ms (0 use the client timestamp)
 	 * @return 0 on success
 	 * */
-	virtual int pushData(const DataSet*ds,uint64_t ts)=0;
+	virtual int pushData(const DataSet&ds,uint64_t ts=0)=0;
 	/**
 		 * push raw data, into a table, with a specified key (key and ts are primary keys)
 		 * @param tbl table where to push
@@ -76,7 +78,7 @@ public:
 		 * @param ts timestamp ms (o use the client timestamp)
 		 * @return 0 on success
 		 * */
-	virtual int pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts)=0;
+	virtual int pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts=0)=0;
 	/**
 	 * Execute a query on the DB (the string depend on the DB)
 	 * @param str query string
@@ -102,6 +104,11 @@ public:
 		 * @return the number of sets retrieved, negative if error
 		 * */
 	virtual int queryData(const std::string& tblname,const std::string& key,blobRecord_t& set,int64_t startTime=0,int64_t endTime=-1)=0;
+
+	/**
+	 *Drop the full dataset 
+	 */
+	virtual int dropData(const DataSet&)=0;
 };
 
 } /* namespace data */

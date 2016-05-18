@@ -22,6 +22,12 @@ DBbase::~DBbase() {
 	// TODO Auto-generated destructor stub
 }
 
+int DBbase::addDBServer(std::vector<std::string> urls){
+	for(std::vector<std::string>::iterator i=urls.begin();i!=urls.end();i++){
+		addDBServer(*i);
+	}
+	return 0;
+}
 
 int DBbase::addDBServer(std::string url){
 	std::vector<std::string>::iterator i;

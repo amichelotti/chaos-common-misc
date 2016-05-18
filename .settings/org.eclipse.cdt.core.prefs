@@ -1,4 +1,9 @@
 eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1710145181/CHAOS_PREFIX/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1710145181/CHAOS_PREFIX/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1710145181/CHAOS_PREFIX/value=/home/michelo/chaos_bundle_x86_64/chaos-x86_64-dynamic-release
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1710145181/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1710145181/appendContributed=true
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.972861367/CHAOS_PREFIX/delimiter=\:
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.972861367/CHAOS_PREFIX/operation=append
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.972861367/CHAOS_PREFIX/value=/home/michelo/chaos_bundle_x86_64/chaos-x86_64-dynamic-release

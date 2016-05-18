@@ -40,13 +40,14 @@ struct DatasetElement{
 		void* buffer;
 		int size;
 		dataTypes type;
-		DatasetElement(){buffer=NULL;size=0;type=TYPE_UNDEFINED;}
+  int internal;
+  DatasetElement(){buffer=NULL;size=0;type=TYPE_UNDEFINED;internal=0;}
 		void resize(int size);
 		template<typename T>
 		operator T() {
 		        return *reinterpret_cast<T*>(buffer);
 		    }
-		~DatasetElement(){DPRINT("deleting dataset element %s",name.c_str());if(buffer)free(buffer);buffer=NULL;}
+  ~DatasetElement(){DPRINT("deleting dataset element %s mem freed %d",name.c_str(),internal);if(internal && buffer)free(buffer);buffer=NULL;}
 };
 
 class DataSet {
@@ -64,6 +65,20 @@ public:
 	DataSet(std::string name);
 	virtual ~DataSet();
 	void setDataSetName(const std::string &_name){name=_name;}
+	void* add(const std::string& name,dataTypes type,std::string& pnt,int size=0){
+				return add( name,type,(void*)pnt.c_str(), pnt.size());
+	}
+	template<typename T>
+		void* add(const std::string& name,dataTypes type,T*pnt,int size=0){
+
+			return add( name,type,(void*)pnt, size==0?sizeof(T):size);
+		}
+	template<typename T>
+	void* add(const std::string& name,dataTypes type,T&pnt,int size=0){
+		return add( name,type,(void*)&pnt, size==0?sizeof(T):size);
+	}
+	void* add(const std::string& name,dataTypes type,void*pnt,int size,int internal=0);
+
 	void* add(const std::string& name,dataTypes type);
 	void* add(const std::string& name,dataTypes type,int size);
 

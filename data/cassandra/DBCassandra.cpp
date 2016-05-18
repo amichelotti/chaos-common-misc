@@ -6,18 +6,21 @@
  */
 
 #include "DBCassandra.h"
+#include <sstream>
 #include <common/debug/core/debug.h>
 namespace common {
 namespace misc {
 namespace data {
 
-DBCassandra::DBCassandra() {
+DBCassandra::DBCassandra(std::string name):DBbase(name) {
 	// TODO Auto-generated constructor stub
-	cluster = cass_cluster_new();
+	cluster=NULL;
+	session=NULL;
 }
 
 DBCassandra::~DBCassandra() {
 	// TODO Auto-generated destructor stub
+	disconnect();
 }
 
 
@@ -27,7 +30,7 @@ const char* DBCassandra::dataTypeToCassandra(dataTypes t){
 	case (TYPE_INT32):
 			return "int";
 	case (TYPE_INT64):
-			return "varint";
+			return "bigint";
 	            //!Double 64 bit length
 	case (TYPE_DOUBLE):
 			return "double";
@@ -39,7 +42,7 @@ const char* DBCassandra::dataTypeToCassandra(dataTypes t){
 			return "varchar";
 
 	case (TYPE_BOOLEAN):
-			return "int";
+			return "boolean";
 
 	case (TYPE_CLUSTER):
 			return "varchar";
@@ -83,6 +86,16 @@ int DBCassandra::executeQuery(const std::string& query){
 	  return  rc==CASS_OK?0:(int)rc;;
 }
 int DBCassandra::connect(){
+	cluster = cass_cluster_new();
+	if(cluster == NULL){
+	  ERR("cannot create cluster structure");
+	  return -100;
+	}
+	session = cass_session_new();
+	if(session == NULL){
+	  ERR("cannot create new session");
+	  return -101;
+	}
 	if(servers.empty()){
 		DERR("no servers are specified");
 		return -1;
@@ -92,7 +105,8 @@ int DBCassandra::connect(){
 		return -1;
 	}
 	for(std::vector <std::string>::iterator i=servers.begin();i!=servers.end();i++){
-		cass_cluster_set_contact_points(cluster, i->c_str());
+	  DPRINT("setting new contact point \"%s\"",i->c_str());
+	  cass_cluster_set_contact_points(cluster, i->c_str());
 
 	}
 
@@ -108,35 +122,34 @@ int DBCassandra::connect(){
 	  cass_future_free(future);
 
 	  if(rc==CASS_OK){
-		  rcc=executeQuery("CREATE KEYSPACE examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };");
-		  if(rcc!=0){
-			  ERR("error creating KEYSPACE");
-		  }
+	    std::stringstream ss;
+	    ss<<"CREATE KEYSPACE IF NOT EXISTS "<<name<<" WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };";
+	    rcc=executeQuery(ss.str().c_str());
+	    if(rcc!=0){
+	      ERR("error creating KEYSPACE %s",name.c_str());
+	    }
 	  }
 	  return rcc;
 
 }
-int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
+int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	CassError rc = CASS_OK;
 	int rcc;
 	CassFuture* future = NULL;
 	std::stringstream query,params,table_query;
 	const CassPrepared* prep;
-	if(dset==NULL){
-		DERR("Bad Data set");
-		return -1;
-	}
-	std::vector<DataSet::DatasetElement_psh> elems=dset->getDataSet();
 
-	std::string table_name= name + "."+dset->getName();
-	if(prepared.find(dset->getName())!=prepared.end()){
-		prep=prepared[dset->getName()];
+	std::vector<DataSet::DatasetElement_psh> elems=dset.getDataSet();
+
+	std::string table_name= name + "."+dset.getName();
+	if(prepared.find(dset.getName())!=prepared.end()){
+		prep=prepared[dset.getName()];
 
 	} else {
 		table_query <<"CREATE TABLE IF NOT EXISTS "<<table_name<<" (event_time timestamp,";
-		query<<"INSERT INTO "<<table_name<<"(uuid,event_time,";
+		query<<"INSERT INTO "<<table_name<<"(event_time,";
 
-		params<<" VALUES (";
+		params<<" VALUES (?,";
 		for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++){
 			if((i+1)!=elems.end()){
 				query<<(*i)->name<<",";
@@ -148,7 +161,7 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 			table_query<<(*i)->name<<" "<<dataTypeToCassandra((*i)->type)<<",";
 
 		}
-		query<<params;
+		query<<params.str();
 		table_query<<" PRIMARY KEY (event_time));";
 		rcc= executeQuery(table_query.str());
 		if(rcc!= 0){
@@ -156,7 +169,7 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 			return rcc;
 		}
 
-		DPRINT("prepared query created for \"%s\" = \"%s\"",dset->getName(),query.str().c_str());
+		DPRINT("prepared query created for \"%s\" = \"%s\"",dset.getName().c_str(),query.str().c_str());
 		future = cass_session_prepare(session, query.str().c_str());
 		cass_future_wait(future);
 		rc = cass_future_error_code(future);
@@ -169,7 +182,7 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 
 		cass_future_free(future);
 
-		prepared[dset->getName()]=prep;
+		prepared[dset.getName()]=prep;
 	}
 	CassStatement* statement = NULL;
 	int cnt=1;
@@ -177,6 +190,7 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 	if(ts==0){
 		ts=::common::debug::getUsTime()/1000;
 	}
+	DPRINT("pushing %lld",ts);
 	cass_statement_bind_int64(statement, 0, (uint64_t)ts);
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
 		switch((*i)->type){
@@ -188,7 +202,7 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 				break;
 			            //!Double 64 bit length
 			case (TYPE_DOUBLE):
-				rc=cass_statement_bind_int64(statement, cnt, (double)**i);
+				rc=cass_statement_bind_double(statement, cnt, (double)**i);
 				break;
 
 			case (TYPE_STRING):{
@@ -204,9 +218,9 @@ int DBCassandra::pushData(const DataSet*dset,uint64_t ts){
 
 		}
 		if(rc!=CASS_OK){
-			ERR("error binding \"%s\" type %d",(*i)->name.c_str(),(*i)->type);
-			cass_statement_free(statement);
-			return rc;
+		  ERR("error binding [%d] \"%s\" type %d",cnt,(*i)->name.c_str(),(*i)->type);
+		  cass_statement_free(statement);
+		  return rc;
 
 		}
 	}
@@ -362,6 +376,34 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 	if(rc!=CASS_OK){
 		ERR("error executing query data");
 		return -1;
+	}
+
+}
+int DBCassandra::dropData(const DataSet& ds){
+  std::stringstream ss;
+  DPRINT("Dropping table %s",ds.getName().c_str());
+  ss<<"DROP TABLE "<<name<<"."<<ds.getName()<<";";
+  int rcc=executeQuery(ss.str().c_str());
+  return rcc;
+
+}
+int DBCassandra::disconnect(){
+  DPRINT("disconnecting");
+	if(session){
+		DPRINT("closing session");
+		CassFuture*  close_future = cass_session_close(session);
+		cass_future_wait(close_future);
+		cass_future_free(close_future);
+	}
+	if(cluster){
+		cass_cluster_free(cluster);
+		cluster=NULL;
+		DPRINT("close cluster");
+	}
+	if(session){
+	 cass_session_free(session);
+	 session=NULL;
+	 DPRINT("close session");
 	}
 
 }
