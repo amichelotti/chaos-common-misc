@@ -8,10 +8,16 @@
 #include "DBCassandra.h"
 #include <sstream>
 #include <common/debug/core/debug.h>
+#include <boost/date_time.hpp>
 namespace common {
 namespace misc {
 namespace data {
-
+  static int64_t epoch_ms(){
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    int64_t mslong = (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000; //get current timestamp in milliseconds
+    return mslong;
+  }
 DBCassandra::DBCassandra(std::string name):DBbase(name) {
 	// TODO Auto-generated constructor stub
 	cluster=NULL;
@@ -188,10 +194,10 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	int cnt=1;
 	statement = cass_prepared_bind(prep);
 	if(ts==0){
-		ts=::common::debug::getUsTime()/1000;
+	  ts=epoch_ms();
 	}
-	DPRINT("pushing %lld",ts);
-	cass_statement_bind_int64(statement, 0, (uint64_t)ts);
+	//	DPRINT("pushing %lld",ts);
+	cass_statement_bind_int64(statement, 0, (int64_t)ts);
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
 		switch((*i)->type){
 			case (TYPE_INT32):
@@ -234,19 +240,19 @@ int DBCassandra::pushData(const std::string &tbl,const std::string &key,std::str
 	std::stringstream query,table_query;
 	const CassPrepared* prep;
 
-
+	
 	if(prepared.find(tbl)!=prepared.end()){
 			prep=prepared[tbl];
 
 	} else {
-		table_query <<"CREATE TABLE IF NOT EXISTS "<<tbl<<" (uuid text, event_time timestamp, data varchar,PRIMARY KEY (uuid,event_time));";
+	  table_query <<"CREATE TABLE IF NOT EXISTS "<<name<<"."<<tbl<<" (uuid text, event_time timestamp, data varchar,PRIMARY KEY (uuid,event_time));";
 		rcc= executeQuery(table_query.str());
 		if(rcc!= 0){
 			DERR("error creating table ");
 			return rcc;
 		}
 
-		query<<"INSERT INTO "<<tbl<<"(uuid,event_time,data) VALUES (?,?,?);";
+		query<<"INSERT INTO "<<name<<"."<<tbl<<" (uuid,event_time,data) VALUES (?,?,?);";
 
 
 		DPRINT("prepared query created for \"%s\" = \"%s\"",tbl.c_str(),query.str().c_str());
@@ -256,10 +262,10 @@ int DBCassandra::pushData(const std::string &tbl,const std::string &key,std::str
 		if (rc != CASS_OK) {
 			cass_future_free(future);
 
-			    print_error(future);
-			    return -1;
+			print_error(future);
+			return -1;
 		} else {
-			    prep = cass_future_get_prepared(future);
+		  prep = cass_future_get_prepared(future);
 		}
 
 		cass_future_free(future);
@@ -271,10 +277,11 @@ int DBCassandra::pushData(const std::string &tbl,const std::string &key,std::str
 	int cnt=1;
 	statement = cass_prepared_bind(prep);
 	if(ts==0){
-		ts=::common::debug::getUsTime()/1000;
+		ts=epoch_ms();
 	}
+	//	DPRINT("pushing %lld",ts);
 	cass_statement_bind_string(statement, 0, key.c_str());
-	cass_statement_bind_int64(statement, 1, (uint64_t)ts);
+	cass_statement_bind_int64(statement, 1, (int64_t)ts);
 	cass_statement_bind_string_n(statement, 2, ds.c_str(),ds.size());
 	rc= execStatement(statement);
 	return rc;

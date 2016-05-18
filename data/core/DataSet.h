@@ -66,21 +66,29 @@ public:
 	virtual ~DataSet();
 	void setDataSetName(const std::string &_name){name=_name;}
 	void* add(const std::string& name,dataTypes type,std::string& pnt,int size=0){
-				return add( name,type,(void*)pnt.c_str(), pnt.size());
+	  DPRINT("adding %s, string type %d",name.c_str(),type);
+	  return add( name,type,(void*)pnt.c_str(), pnt.size());
 	}
 	template<typename T>
 		void* add(const std::string& name,dataTypes type,T*pnt,int size=0){
-
+	  DPRINT("adding %s, type* %d",name.c_str(),type);
 			return add( name,type,(void*)pnt, size==0?sizeof(T):size);
 		}
 	template<typename T>
 	void* add(const std::string& name,dataTypes type,T&pnt,int size=0){
+	  DPRINT("adding %s, type %d",name.c_str(),type);
 		return add( name,type,(void*)&pnt, size==0?sizeof(T):size);
 	}
 	void* add(const std::string& name,dataTypes type,void*pnt,int size,int internal=0);
 
 	void* add(const std::string& name,dataTypes type);
-	void* add(const std::string& name,dataTypes type,int size);
+	template<typename T>
+	  int set(const std::string& name,T&pnt,int size=0){
+	  return set( name,(void*)&pnt, size==0?sizeof(T):size);
+	}
+	int set(const std::string& name,std::string &pnt){
+	  return set( name,(void*)pnt.c_str(), pnt.size());
+	}
 
 	int set(int idx,void*ptr,int size);
 	int set(const std::string& name,void*ptr,int size);

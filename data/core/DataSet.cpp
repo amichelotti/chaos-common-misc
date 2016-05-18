@@ -87,7 +87,7 @@ void DatasetElement::resize(int siz){
 		size = siz;
 	}
 }
-
+/*
 void* DataSet::add(const std::string& name,dataTypes type,int size){
 	if(elem_by_name.find(name)!=elem_by_name.end())
 		return 0;
@@ -102,19 +102,33 @@ void* DataSet::add(const std::string& name,dataTypes type,int size){
 	elem_by_name[name]=ds;
 	return ds->buffer;
 }
+*/
 int DataSet::set(int idx,void*ptr,int size){
-	if(idx<elems.size()){
-		elems[idx]->resize(size);
-		memcpy(elems[idx]->buffer,ptr,size);
-		return 0;
-	}
-	return -1;
+    if(idx<elems.size()){
+      if(elems[idx]->internal){
+	elems[idx]->resize(size);
+	memcpy(elems[idx]->buffer,ptr,size);
+
+      } else {
+	elems[idx]->buffer=ptr;
+	elems[idx]->size=size;
+      }
+      return 0;
+    }
+    return -1;
 }
 
 int DataSet::set(const std::string& name,void*ptr,int size){
 	if(elem_by_name.find(name)==elem_by_name.end())
 			return -1;
-	elem_by_name[name]->resize(size);
-	memcpy(elem_by_name[name]->buffer,ptr,size);
+	if(elem_by_name[name]->internal){
+	  
+	  elem_by_name[name]->resize(size);
+	  memcpy(elem_by_name[name]->buffer,ptr,size);
+	  
+	} else {
+	  elem_by_name[name]->buffer=ptr;
+	  elem_by_name[name]->size=size;
+	}
 	return 0;
 }

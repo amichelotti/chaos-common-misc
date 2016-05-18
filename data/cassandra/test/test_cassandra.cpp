@@ -101,7 +101,8 @@ int main(int argc,char**argv) {
 				mydouble+=2.0;
 				mint++;
 				mint64+=1000;
-
+				cs+=".";
+				mydataset.set("stringval",cs);
 				if(cassandra.pushData(mydataset,0)!=0){
 				  std::cerr<<"Error pushing"<<std::endl;
 				  return -1;
