@@ -23,8 +23,8 @@ protected:
 
 public:
 	typedef std::map<int64_t,DataSet> datasetRecord_t;
-	typedef std::map<std::string,std::string> kv_t;
-	typedef std::map<int64_t,kv_t > blobRecord_t;
+	typedef std::pair<int64_t, std::string> kv_t;
+	typedef std::vector<kv_t > blobRecord_t;
 
 	DBbase();
 	DBbase(const std::string &_name);

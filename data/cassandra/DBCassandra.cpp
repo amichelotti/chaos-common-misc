@@ -147,15 +147,15 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 
 	std::vector<DataSet::DatasetElement_psh> elems=dset.getDataSet();
 
-	std::string table_name= name + "."+dset.getName();
+	std::string table_name= name + "."+dset.getUID();
 	if(prepared.find(dset.getName())!=prepared.end()){
 		prep=prepared[dset.getName()];
 
 	} else {
-		table_query <<"CREATE TABLE IF NOT EXISTS "<<table_name<<" (event_time timestamp,";
-		query<<"INSERT INTO "<<table_name<<"(event_time,";
+		table_query <<"CREATE TABLE IF NOT EXISTS "<<table_name<<" (uuid text,event_time timestamp,";
+		query<<"INSERT INTO "<<table_name<<" (uuid,event_time,";
 
-		params<<" VALUES (?,";
+		params<<" VALUES (?,?,";
 		for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++){
 			if((i+1)!=elems.end()){
 				query<<(*i)->name<<",";
@@ -168,7 +168,7 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 
 		}
 		query<<params.str();
-		table_query<<" PRIMARY KEY (event_time));";
+		table_query<<" PRIMARY KEY (uuid,event_time));";
 		rcc= executeQuery(table_query.str());
 		if(rcc!= 0){
 			DERR("error creating table ");
@@ -197,7 +197,9 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	  ts=epoch_ms();
 	}
 	//	DPRINT("pushing %lld",ts);
-	cass_statement_bind_int64(statement, 0, (int64_t)ts);
+	cass_statement_bind_string(statement, 0, dset.getName().c_str());
+	cass_statement_bind_int64(statement, 1, (int64_t)ts);
+	cnt=2;
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
 		switch((*i)->type){
 			case (TYPE_INT32):
@@ -291,25 +293,27 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 	std::stringstream query;
 	CassError rc;
 	int rcc;
-	std::string dsname=ds.getName();
+	std::string table_name= name + "."+ds.getUID();
+
 	std::vector<DataSet::DatasetElement_psh> elems=ds.getDataSet();
 
 	if(startTime==0 && endTime==-1){
-		query<<"SELECT * from "<<name<<"."<<dsname<<" order by event_time desc;";
+		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' order by event_time desc;";
 	} else if(startTime==-1 && endTime ==-1){
-		query<<"SELECT * from "<<name<<"."<<dsname<<" order by event_time desc limit 1;";
+		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' order by event_time desc limit 1;";
 	} else if(startTime==0 && endTime ==0){
-		query<<"SELECT * from "<<name<<"."<<dsname<<" order by event_time asc limit 1;";
+		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' order by event_time asc limit 1;";
 	} else {
-		query<<"SELECT * from "<<name<<"."<<dsname<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
+		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' AND event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
 	}
 	DPRINT("query: \"%s\"",query.str().c_str());
 	CassStatement* statement = cass_statement_new(query.str().c_str(), 0);
 	CassFuture* future = cass_session_execute(session, statement);
 	rc = cass_future_error_code(future);
 	if (rc != CASS_OK) {
-		cass_future_free(future);
 		print_error(future);
+		cass_future_free(future);
+
 		return -1;
 	} else {
 		 const CassResult* result = cass_future_get_result(future);
@@ -326,16 +330,16 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		  while (cass_iterator_next(iterator)) {
 		        const CassRow* row = cass_iterator_get_row(iterator);
 		        int64_t ts;
-		        cnt=0;
+		        cnt=1;
 		        cass_value_get_int64(cass_row_get_column(row, cnt),(int64_t*)&ts);
 		        cnt++;
-		        DataSet tmp;
+		        DataSet tmp("result","res");
 		        for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
 		        	switch((*i)->type){
 		        				case (TYPE_INT32):{
-
 		        					void* ptr=tmp.add((*i)->name,(*i)->type);
 									cass_value_get_int32(cass_row_get_column(row, cnt),(int32_t*)ptr);
+									//tmp.add((*i)->name,(*i)->type,t);
 									break;
 		        				}
 
@@ -369,7 +373,10 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        				}
 		        			}
 		        }
-		        set[ts]=tmp;
+		        set.insert(std::make_pair<int64_t,DataSet>(ts,tmp));
+		        //std::stringstream pp;
+		       // pp<<"temp:"<<tmp<<" SET:"<<set[ts];
+		        //DPRINT("%d] %s",nrows,pp.str().c_str());
 		        nrows++;
 
 
@@ -384,12 +391,14 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		ERR("error executing query data");
 		return -1;
 	}
-
+	return 0;
 }
-int DBCassandra::dropData(const DataSet& ds){
+int DBCassandra::dropData(const DataSet& dset){
   std::stringstream ss;
-  DPRINT("Dropping table %s",ds.getName().c_str());
-  ss<<"DROP TABLE "<<name<<"."<<ds.getName()<<";";
+  std::string table_name= name + "."+dset.getUID();
+
+  DPRINT("Dropping table %s",table_name.c_str());
+  ss<<"DROP TABLE "<<table_name<<";";
   int rcc=executeQuery(ss.str().c_str());
   return rcc;
 
@@ -418,22 +427,24 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 	std::stringstream query,opt;
 	CassError rc;
 	int rcc;
-	if(!key.empty()){
-		opt<<" WHERE uuid == '"<<key<<"'";
+	if(key.empty()){
+		ERR("key cannot be empty");
+		return -10;
 	}
 	if(startTime==0 && endTime==-1){
-			query<<"SELECT * from "<<name<<"."<<tbl<<opt<<" order by event_time desc;";
+			query<<"SELECT * from "<<name<<"."<<tbl<<" WHERE uuid = '"<<key<<"'"<<" order by event_time desc;";
 		} else if(startTime==-1 && endTime ==-1){
-			query<<"SELECT * from "<<name<<"."<<tbl<<opt<<" order by event_time desc limit 1;";
+			query<<"SELECT * from "<<name<<"."<<tbl<<" WHERE uuid = '"<<key<<"'"<<" order by event_time desc limit 1;";
 		} else if(startTime==0 && endTime ==0){
-			query<<"SELECT * from "<<name<<"."<<tbl<<opt<<" order by event_time asc limit 1;";
+			query<<"SELECT * from "<<name<<"."<<tbl<<" WHERE uuid = '"<<key<<"'"<<" order by event_time asc limit 1;";
 		} else {
 			if(key.empty()){
-				query<<"SELECT * from "<<name<<"."<<tbl<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
+				query<<"SELECT * from "<<name<<"."<<" WHERE uuid = '"<<key<<"'"<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
 			} else {
 				query<<"SELECT * from "<<name<<"."<<tbl<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<< "AND uuid = '"<<key<<"' order by event_time desc ;";
 			}
 		}
+	DPRINT("query:\"%s\"",query.str().c_str());
 	CassStatement* statement = cass_statement_new(query.str().c_str(), 0);
 	CassFuture* future = cass_session_execute(session, statement);
 	rc = cass_future_error_code(future);
@@ -456,14 +467,17 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 			  while (cass_iterator_next(iterator)) {
 			        const CassRow* row = cass_iterator_get_row(iterator);
 			        int64_t ts;
-			      	cass_value_get_int64(cass_row_get_column(row, 0),(int64_t*)&ts);
+			      	cass_value_get_int64(cass_row_get_column(row, 1),(int64_t*)&ts);
 			      	const char *key,*data;
 			      	size_t sizkey,sizdata;
-			      	cass_value_get_string(cass_row_get_column(row, 1),&key,&sizkey);
-			      	cass_value_get_string(cass_row_get_column(row, 1),&data,&sizdata);
+			      //	cass_value_get_string(cass_row_get_column(row, 0),&key,&sizkey);
+			      	cass_value_get_string(cass_row_get_column(row, 2),&data,&sizdata);
 			      	kv_t t;
-			      	t.insert(std::make_pair<std::string,std::string>(std::string(key),std::string(data)));
-			      	set.insert(std::make_pair<int64_t,kv_t >(ts,t));
+			      //	DPRINT("[%lld] %s %s",ts,key,data);
+
+			      	t = std::make_pair<int64_t,std::string>(ts,std::string(data));
+			      	set.push_back(t);
+
 
 			  }
 			  cass_iterator_free(iterator);

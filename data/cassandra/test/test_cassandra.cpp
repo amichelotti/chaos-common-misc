@@ -73,7 +73,7 @@ int main(int argc,char**argv) {
 		return -1;
 	}
 	if(enable_raw){
-
+		//////////// PUSH
 		boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
 		for(int cnt=0;cnt<npushes;cnt++){
 			std::stringstream ss;
@@ -85,8 +85,19 @@ int main(int argc,char**argv) {
 			}
 		}
 		std::cout<<"Raw Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+		////READ
+		DBbase::blobRecord_t ret;
+		start=boost::posix_time::microsec_clock::local_time();
+		if(cassandra.queryData(dbtable,key,ret)!=0){
+			std::cerr<<"Error retriving data"<<std::endl;
+			return -1;
+		}
+		std::cout<<"Raw Query:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<ret.size()<<" push"<<std::endl;
+		for(DBbase::blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+			std::cout<<"["<<i->first<<"] "<<key<<":"<<(i->second)<<std::endl;
+		}
 	} else {
-		DataSet mydataset("myCU");
+		DataSet mydataset("typeTest","myCU");
 		double mydouble=0;
 		int mint=0;
 		int64_t mint64=0;
@@ -109,6 +120,43 @@ int main(int argc,char**argv) {
 				}
 		}
 				std::cout<<"Dataset Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+
+
+				DBbase::datasetRecord_t ret,rlast,rfirst;
+				 start=boost::posix_time::microsec_clock::local_time();
+
+				//get all
+				if(cassandra.queryData(mydataset,ret)!=0){
+					std::cerr<<"error retriving dataset";
+					return -1;
+				}
+				std::cout<<"Dataset Get:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+
+				for(DBbase::datasetRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+					std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
+				}
+				//get last
+
+				//get last
+				if(cassandra.queryData(mydataset,rlast,-1,-1)!=0){
+					std::cerr<<"error retriving dataset";
+					return -1;
+				}
+				std::cout<<"LAST"<<std::endl;
+				for(DBbase::datasetRecord_t::iterator i=rlast.begin();i!=rlast.end();i++){
+									std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
+			}
+
+				//get first
+								if(cassandra.queryData(mydataset,rfirst,0,0)!=0){
+									std::cerr<<"error retriving dataset";
+									return -1;
+								}
+								std::cout<<"FIRST"<<std::endl;
+								for(DBbase::datasetRecord_t::iterator i=rfirst.begin();i!=rfirst.end();i++){
+													std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
+							}
+
 	}
 
 

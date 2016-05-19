@@ -4,23 +4,26 @@
  *  Created on: Feb 23, 2016
  *      Author: michelo
  */
-
+#undef DEBUG
 #include "DataSet.h"
 #include <string.h>
+#include <sstream>
+#include <boost/date_time.hpp>
 using namespace common::misc::data;
 
 DataSet::DataSet() {
 	// TODO Auto-generated constructor stub
 	name="noname";
+	uuid="nover";
+	DPRINT("creating dataset %d",elems.size());
 }
 
 DataSet::~DataSet() {
 	// TODO Auto-generated destructor stub
-  DPRINT("destroying %s",name.c_str());
+ // DPRINT("destroying %s",name.c_str());
 }
 
-DataSet::DataSet(std::string _name):name(_name){
-
+DataSet::DataSet(std::string uid,std::string _name):name(_name),uuid(uid){
 };
 
 void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int inter){
@@ -37,6 +40,12 @@ void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int 
 	elem_by_name[name]=ds;
 	return ds->buffer;
 
+}
+ const char* DataSet::getTag() const {
+	std::stringstream ss;
+	boost::posix_time::ptime pt=boost::posix_time::second_clock::local_time();
+	ss<<pt.date();
+	return ss.str().c_str();
 }
 
 void* DataSet::add(const std::string& name,dataTypes type){
@@ -132,3 +141,59 @@ int DataSet::set(const std::string& name,void*ptr,int size){
 	}
 	return 0;
 }
+
+namespace common  {
+namespace misc {
+namespace data {
+std::ostream& operator<<(std::ostream& in,const DataSet&d){
+	std::vector<DataSet::DatasetElement_psh> ds=d.elems;
+	in<<"{\"type\":"<<d.uuid<<",\"name\":"<<d.name<<",\"values\":[";
+	for(std::vector<DataSet::DatasetElement_psh>::iterator i= ds.begin();i!=ds.end();i++){
+		const DatasetElement& k=*(*i);
+		if(i+1 == ds.end()){
+			in<<k;
+		} else {
+			in<<k<<",";
+		}
+	}
+	in<<"]}";
+	return in;
+}
+std::ostream& operator<<(std::ostream& in,const DatasetElement&ds){
+	std::stringstream ss;
+	switch(ds.type){
+		case (TYPE_INT32):
+		  ss<<"{\""<<ds.name<<"\":"<<*(int32_t*)ds.buffer<<"}";
+
+
+		  break;
+		case (TYPE_INT64):
+		 ss<<"{\""<<ds.name<<"\":"<<*(int64_t*)ds.buffer<<"}";
+
+		  break;
+		  //!Double 64 bit length
+		case (TYPE_DOUBLE):
+		ss<<"{\""<<ds.name<<"\":"<<*(double*)ds.buffer<<"}";
+
+		  break;
+
+		case (TYPE_STRING):{
+			std::string tmp((const char*)ds.buffer);
+			ss<<"{\""<<ds.name<<"\": \""<<tmp<<"\"}";
+
+		  break;
+		}
+		case (TYPE_BOOLEAN):
+		ss<<"{\""<<ds.name<<"\":"<<*(bool*)ds.buffer<<"}";
+
+		  break;
+		default:
+
+		  break;
+
+		}
+	return in<<ss.str();
+}
+}}}
+
+
