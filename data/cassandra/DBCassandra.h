@@ -7,7 +7,7 @@
 
 #ifndef DATA_CASSANDRA_DBCASSANDRA_H_
 #define DATA_CASSANDRA_DBCASSANDRA_H_
-#include <common/misc/data/core/DBbase.h>
+#include <common/misc/data/DBbase.h>
 #include <vector>
 #include "cassandra.h"
 
@@ -25,6 +25,7 @@ class DBCassandra: public DBbase {
 	void print_error(CassFuture* future);
 	const char* dataTypeToCassandra(dataTypes t);
 	CassError execStatement(CassStatement* statement);
+	bool is_connected;
 public:
 	DBCassandra(std::string name);
 	virtual ~DBCassandra();

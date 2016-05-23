@@ -14,7 +14,7 @@ ELSE()
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
 ENDIF()
 
-file (GLOB src core/*.cpp)
+file (GLOB src *.cpp)
 
 
 
@@ -28,7 +28,7 @@ ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} common_debug)
 INSTALL_TARGETS(/lib  ${PROJECT_NAME})
 
-FILE(GLOB headers "core/*.h")
+FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data)
 
 ADD_SUBDIRECTORY(cassandra)

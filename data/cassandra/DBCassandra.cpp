@@ -22,6 +22,8 @@ DBCassandra::DBCassandra(std::string name):DBbase(name) {
 	// TODO Auto-generated constructor stub
 	cluster=NULL;
 	session=NULL;
+	is_connected = false;
+
 }
 
 DBCassandra::~DBCassandra() {
@@ -29,32 +31,34 @@ DBCassandra::~DBCassandra() {
 	disconnect();
 }
 
+#define TYPE2CASSANDRA(type,native) if(type&TYPE_ACCESS_ARRAY) return "list<" native ">"; else return native;
 
 const char* DBCassandra::dataTypeToCassandra(dataTypes t){
 
-	switch(t){
+	switch(t&0xff){
 	case (TYPE_INT32):
-			return "int";
+		TYPE2CASSANDRA(t,"int");
+
 	case (TYPE_INT64):
-			return "bigint";
+		TYPE2CASSANDRA(t,"bigint");
 	            //!Double 64 bit length
 	case (TYPE_DOUBLE):
-			return "double";
+		TYPE2CASSANDRA(t,"double");
 
 	case (TYPE_STRING):
-			return "text";
+		TYPE2CASSANDRA(t,"text");
 
 	case (TYPE_BYTEARRAY):
-			return "varchar";
+		TYPE2CASSANDRA(t,"varchar");
 
 	case (TYPE_BOOLEAN):
-			return "boolean";
+		TYPE2CASSANDRA(t,"boolean");
 
 	case (TYPE_CLUSTER):
-			return "varchar";
+				TYPE2CASSANDRA(t,"varchar");
 	default :
 		ERR("undefined type");
-		return "varchar";
+		TYPE2CASSANDRA(t,"varchar");
 	}
 }
 
@@ -92,6 +96,10 @@ int DBCassandra::executeQuery(const std::string& query){
 	  return  rc==CASS_OK?0:(int)rc;;
 }
 int DBCassandra::connect(){
+	if(is_connected==true){
+		ERR("already connected");
+		return 0;
+	}
 	cluster = cass_cluster_new();
 	if(cluster == NULL){
 	  ERR("cannot create cluster structure");
@@ -134,6 +142,9 @@ int DBCassandra::connect(){
 	    if(rcc!=0){
 	      ERR("error creating KEYSPACE %s",name.c_str());
 	    }
+	  }
+	  if(rcc==0){
+		  is_connected = true;
 	  }
 	  return rcc;
 
@@ -200,30 +211,66 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	cass_statement_bind_string(statement, 0, dset.getName().c_str());
 	cass_statement_bind_int64(statement, 1, (int64_t)ts);
 	cnt=2;
+	CassCollection* collection = NULL;
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
-		switch((*i)->type){
-			case (TYPE_INT32):
-				  rc=cass_statement_bind_int32(statement, cnt, (int32_t)**i);
-					break;
-			case (TYPE_INT64):
-				rc=cass_statement_bind_int64(statement, cnt, (int64_t)**i);
-				break;
-			            //!Double 64 bit length
-			case (TYPE_DOUBLE):
-				rc=cass_statement_bind_double(statement, cnt, (double)**i);
-				break;
 
-			case (TYPE_STRING):{
-				rc=cass_statement_bind_string(statement, cnt, (const char*)(*i)->buffer);
-				break;
+		if((*i)->type & TYPE_ACCESS_ARRAY){
+			void* ptr=**i;
+			collection = cass_collection_new(CASS_COLLECTION_TYPE_LIST, (*i)->molteplicity);
+			DPRINT("binding array %s[%d] of %d",(*i)->name.c_str(),(*i)->molteplicity,(*i)->type)
+			for(int cntt=0;cntt<(*i)->molteplicity;cntt++){
+
+				switch((*i)->type&0xff){
+					case (TYPE_INT32):{
+							int32_t* val=(int32_t*)ptr;
+						   cass_collection_append_int32(collection, val[cntt]);
+						   break;
+					}
+					case (TYPE_INT64):{
+							int64_t* val=(int64_t*)ptr;
+						   cass_collection_append_int64(collection, val[cntt]);
+						   break;
+					}
+					case (TYPE_DOUBLE):{
+												double* val=(double*)ptr;
+											   cass_collection_append_double(collection, val[cntt]);
+											   break;
+										}
+
+					default:
+						ERR("type array not supported %s %d",(*i)->name.c_str(),(*i)->type);
+						return -110;
+				}
+				  cass_statement_bind_collection(statement, cnt, collection);
+				  cass_collection_free(collection);
+
+
 			}
-			case (TYPE_BOOLEAN):
-				rc=cass_statement_bind_bool(statement, cnt, (cass_bool_t)**i);
-				break;
-			default:
-				rc=cass_statement_bind_string_n(statement,cnt,(const char*)(*i)->buffer,(*i)->size);
-				break;
+		} else {
+			switch((*i)->type){
+				case (TYPE_INT32):
+					  rc=cass_statement_bind_int32(statement, cnt, (int32_t)**i);
+						break;
+				case (TYPE_INT64):
+					rc=cass_statement_bind_int64(statement, cnt, (int64_t)**i);
+					break;
+							//!Double 64 bit length
+				case (TYPE_DOUBLE):
+					rc=cass_statement_bind_double(statement, cnt, (double)**i);
+					break;
 
+				case (TYPE_STRING):{
+					rc=cass_statement_bind_string(statement, cnt, (const char*)(*i)->buffer);
+					break;
+				}
+				case (TYPE_BOOLEAN):
+					rc=cass_statement_bind_bool(statement, cnt, (cass_bool_t)**i);
+					break;
+				default:
+					rc=cass_statement_bind_string_n(statement,cnt,(const char*)(*i)->buffer,(*i)->size);
+					break;
+
+			}
 		}
 		if(rc!=CASS_OK){
 		  ERR("error binding [%d] \"%s\" type %d",cnt,(*i)->name.c_str(),(*i)->type);
@@ -335,7 +382,38 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        cnt++;
 		        DataSet tmp("result","res");
 		        for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
-		        	switch((*i)->type){
+		        	CassIterator * items_iterator;
+		        	if((*i)->type & TYPE_ACCESS_ARRAY){
+		        				items_iterator = cass_iterator_from_collection(cass_row_get_column(row, cnt));
+		        				 while (cass_iterator_next(items_iterator)) {
+		        					 switch((*i)->type&0xff){
+		        					 case (TYPE_INT32):{
+		        					 		     void* ptr=tmp.add((*i)->name,(*i)->type);
+		        					 		     cass_value_get_int32(cass_iterator_get_value(items_iterator),(int32_t*)ptr);
+		        					 			break;
+		        					}
+
+									case (TYPE_INT64):{
+
+										void* ptr=tmp.add((*i)->name,(*i)->type);
+										cass_value_get_int64(cass_iterator_get_value(items_iterator),(int64_t*)ptr);
+										break;
+									}
+		        					 		        				            //!Double 64 bit length
+									case (TYPE_DOUBLE):{
+											void* ptr=tmp.add((*i)->name,(*i)->type);
+											cass_value_get_double(cass_iterator_get_value(items_iterator),(double*)ptr);
+											break;
+										}
+									default:
+		        							ERR("type array not supported %s %d",(*i)->name.c_str(),(*i)->type);
+		        							return -123;
+		        					 }
+
+		        				 }
+		        				 cass_iterator_free(items_iterator);
+		        			} else {
+		        				switch((*i)->type){
 		        				case (TYPE_INT32):{
 		        					void* ptr=tmp.add((*i)->name,(*i)->type);
 									cass_value_get_int32(cass_row_get_column(row, cnt),(int32_t*)ptr);
@@ -372,6 +450,7 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        					break;
 		        				}
 		        			}
+		        }
 		        }
 		        set.insert(std::make_pair<int64_t,DataSet>(ts,tmp));
 		        //std::stringstream pp;
@@ -421,6 +500,7 @@ int DBCassandra::disconnect(){
 	 session=NULL;
 	 DPRINT("close session");
 	}
+	is_connected = false;
 
 }
 int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRecord_t& set,int64_t startTime,int64_t endTime){

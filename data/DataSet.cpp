@@ -29,13 +29,15 @@ DataSet::DataSet(std::string uid,std::string _name):name(_name),uuid(uid){
 void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int inter){
 	if(elem_by_name.find(name)!=elem_by_name.end())
 	  return 0;
-	DPRINT("adding element \"%s\" type %d, pnt 0x%x size %d, internal %d",name.c_str(),type,pnt,size,inter);
+
 	DatasetElement_psh ds = boost::shared_ptr<DatasetElement>(new DatasetElement);
 	ds->buffer=pnt;
 	ds->size = size;
 	ds->name =name;
 	ds->type=type;
+	ds->molteplicity=size/type2size(type);
 	ds->internal+=inter;
+	DPRINT("adding element \"%s\" type %d, pnt 0x%x size %d, internal %d,molteplicity %d",name.c_str(),type,pnt,size,ds->internal,ds->molteplicity);
 	elems.push_back(ds);
 	elem_by_name[name]=ds;
 	return ds->buffer;
@@ -47,41 +49,43 @@ void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int 
 	ss<<pt.date();
 	return ss.str().c_str();
 }
+ int DataSet::type2size(dataTypes type){
+	 switch(type&0xff){
+	 	case (TYPE_INT32):
+	 	  return sizeof(int);
 
+	 	case (TYPE_INT64):
+	 	  return sizeof(int64_t);
+
+	 	  //!Double 64 bit length
+	 	case (TYPE_DOUBLE):
+	 	 return sizeof(double);
+
+	 	case (TYPE_STRING):
+	 			return 1024;
+	 	case (TYPE_BOOLEAN):
+	 	 return sizeof(bool);
+
+
+	 	}
+		 return sizeof(double);
+
+ }
 void* DataSet::add(const std::string& name,dataTypes type){
 	int size=8;
 	void *pnt=NULL;
-	DPRINT("adding element \"%s\" with memory type %d",name.c_str(),type);
-	switch(type){
-	case (TYPE_INT32):
-	  size = 4;
-	  
-	  
-	  break;
-	case (TYPE_INT64):
-	  size = 8;
-	  
-	  break;
-	  //!Double 64 bit length
-	case (TYPE_DOUBLE):
-	  size = 8;
-	  
-	  break;
-	  
-	case (TYPE_STRING):{
-	  size = 1024;
-	  
-	  break;
+	if(elem_by_name.find(name)!=elem_by_name.end()){
+		DPRINT("adding another element of type %d",type);
+		int tt=type;
+		tt+=(int)TYPE_ACCESS_ARRAY;
+		type =  (dataTypes)tt;
+		size  +=type2size(type);
+	} else {
+		DPRINT("adding element \"%s\" with memory type %d",name.c_str(),type);
+		size  =type2size(type);
 	}
-	case (TYPE_BOOLEAN):
-	  size = sizeof(bool);
-	  break;
-	default:
-	  
-	  break;
-	  
-	}
-	pnt = malloc(size);
+
+	pnt = realloc(pnt,size);
 	return add(name,type,pnt, size,1);
 	
 }

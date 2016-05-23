@@ -39,9 +39,10 @@ struct DatasetElement{
 		std::string name;
 		void* buffer;
 		int size;
+		int molteplicity;
 		dataTypes type;
   int internal;
-  DatasetElement(){buffer=NULL;size=0;type=TYPE_UNDEFINED;internal=0;}
+  DatasetElement(){buffer=NULL;size=0;type=TYPE_UNDEFINED;internal=0;molteplicity=0;}
 		void resize(int size);
 		template<typename T>
 		operator T() {
@@ -63,6 +64,7 @@ protected:
 	std::string uuid; // identify the dataset type
 	std::string name; // identify the different instance
 	friend std::ostream& operator<<(std::ostream& in,const DataSet&ds);
+	static int type2size(dataTypes t);
 public:
 	DataSet();
 
@@ -78,6 +80,7 @@ public:
 	template<typename T>
 		void* add(const std::string& name,dataTypes type,T*pnt,int size=0){
 	  DPRINT("adding %s, type* %d",name.c_str(),type);
+
 			return add( name,type,(void*)pnt, size==0?sizeof(T):size);
 		}
 	template<typename T>
