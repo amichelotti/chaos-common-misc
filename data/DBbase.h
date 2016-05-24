@@ -11,47 +11,85 @@
 #include <string>
 #include <map>
 #include "DataSet.h"
+#include <boost/thread/mutex.hpp>
 namespace common {
 namespace misc {
 namespace data {
-
+typedef std::map<int64_t,DataSet> datasetRecord_t;
+typedef std::pair<int64_t, std::string> kv_t;
+typedef std::vector<kv_t > blobRecord_t;
+template <typename T>
 class DBbase {
 protected:
 	std::vector <std::string> servers;
 	std::string name;
 	std::map<std::string,std::string> kv_parameters;
 
-public:
-	typedef std::map<int64_t,DataSet> datasetRecord_t;
-	typedef std::pair<int64_t, std::string> kv_t;
-	typedef std::vector<kv_t > blobRecord_t;
 
-	DBbase();
-	DBbase(const std::string &_name);
+	static std::map<std::string, T*> instances;
 
-	virtual ~DBbase();
+	static boost::mutex mutex;
+
+	public:
+	static T& getInstance(const std::string& name ){
+			boost::mutex::scoped_lock l(mutex);
+			typename std::map<std::string, T*>::iterator i=instances.find(name);
+			if(i!=instances.end()){
+				return *(i->second);
+			}
+			T*ret=new T(name);
+			instances[name]=ret;
+			return *ret;
+		}
+	DBbase(){}
+	DBbase(const std::string _name):name(_name){}
+	virtual ~DBbase(){}
+
 
 	/**
 	 * Add a Server url
 	 * @param url server address/url
 	 * @return 0 on success
 	 * */
-	virtual int addDBServer(std::string url);
+	 int addDBServer(std::string url){
+			std::vector<std::string>::iterator i;
+			for(i=servers.begin();i!=servers.end();i++){
+				if(*i == url){
+					return -1;
+				}
 
-	int addDBServer(std::vector<std::string> urls);
+			}
+
+			servers.push_back(url);
+			return 0;
+		}
+
+	int addDBServer(std::vector<std::string> urls){
+		for(std::vector<std::string>::iterator i=urls.begin();i!=urls.end();i++){
+			addDBServer(*i);
+		}
+		return 0;
+	}
 	/**
 		 * Set the database name
 		 * @param name database name
 		 * @return 0 on success
-		 * */
-	virtual int setDBName(std::string name);
+	*/
+	 int setDBName(std::string _name){
+		 name = _name;
+		 return 0;
+
+	 }
 	/**
 			 * Set the database parameters
 			 * @param key parameter name
 			 * @param value parameter value
 			 * @return 0 on success
 			 * */
-	virtual int setDBParameters(std::string key,std::string value);
+	 int setDBParameters(std::string key,std::string value){
+		  kv_parameters[key]=value;
+	  }
+
 
 	/**
 	 * connects to database
@@ -105,11 +143,14 @@ public:
 		 * */
 	virtual int queryData(const std::string& tblname,const std::string& key,blobRecord_t& set,int64_t startTime=0,int64_t endTime=-1)=0;
 
+
 	/**
 	 *Drop the full dataset 
 	 */
 	virtual int dropData(const DataSet&)=0;
 };
+template <typename T> boost::mutex DBbase<T>::mutex;
+template <typename T> std::map<std::string,T*> DBbase<T>::instances;
 
 } /* namespace data */
 } /* namespace misc */

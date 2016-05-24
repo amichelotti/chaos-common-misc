@@ -66,7 +66,8 @@ int main(int argc,char**argv) {
 			enable_raw=1;
 	}
 	DPRINT("connecting to %s",servers[0].c_str());
-	DBCassandra cassandra(dbname);
+	DBCassandra& cassandra=DBCassandra::getInstance("chaos");
+
 	cassandra.addDBServer(servers);
 	if(cassandra.connect()!=0){
 		ERR("error connecting");
@@ -86,14 +87,14 @@ int main(int argc,char**argv) {
 		}
 		std::cout<<"Raw Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
 		////READ
-		DBbase::blobRecord_t ret;
+		blobRecord_t ret;
 		start=boost::posix_time::microsec_clock::local_time();
 		if(cassandra.queryData(dbtable,key,ret)!=0){
 			std::cerr<<"Error retriving data"<<std::endl;
 			return -1;
 		}
 		std::cout<<"Raw Query:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<ret.size()<<" push"<<std::endl;
-		for(DBbase::blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+		for(blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
 			std::cout<<"["<<i->first<<"] "<<key<<":"<<(i->second)<<std::endl;
 		}
 	} else {
@@ -122,7 +123,7 @@ int main(int argc,char**argv) {
 				std::cout<<"Dataset Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
 
 
-				DBbase::datasetRecord_t ret,rlast,rfirst;
+				datasetRecord_t ret,rlast,rfirst;
 				 start=boost::posix_time::microsec_clock::local_time();
 
 				//get all
@@ -132,7 +133,7 @@ int main(int argc,char**argv) {
 				}
 				std::cout<<"Dataset Get:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
 
-				for(DBbase::datasetRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+				for(datasetRecord_t::iterator i=ret.begin();i!=ret.end();i++){
 					std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
 				}
 				//get last
@@ -143,7 +144,7 @@ int main(int argc,char**argv) {
 					return -1;
 				}
 				std::cout<<"LAST"<<std::endl;
-				for(DBbase::datasetRecord_t::iterator i=rlast.begin();i!=rlast.end();i++){
+				for(datasetRecord_t::iterator i=rlast.begin();i!=rlast.end();i++){
 									std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
 			}
 
@@ -153,7 +154,7 @@ int main(int argc,char**argv) {
 									return -1;
 								}
 								std::cout<<"FIRST"<<std::endl;
-								for(DBbase::datasetRecord_t::iterator i=rfirst.begin();i!=rfirst.end();i++){
+								for(datasetRecord_t::iterator i=rfirst.begin();i!=rfirst.end();i++){
 													std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;
 							}
 

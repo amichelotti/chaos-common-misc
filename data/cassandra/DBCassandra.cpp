@@ -18,7 +18,7 @@ namespace data {
     int64_t mslong = (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000; //get current timestamp in milliseconds
     return mslong;
   }
-DBCassandra::DBCassandra(std::string name):DBbase(name) {
+DBCassandra::DBCassandra(const std::string name):DBbase<DBCassandra>(name){
 	// TODO Auto-generated constructor stub
 	cluster=NULL;
 	session=NULL;
@@ -96,6 +96,11 @@ int DBCassandra::executeQuery(const std::string& query){
 	  return  rc==CASS_OK?0:(int)rc;;
 }
 int DBCassandra::connect(){
+	if(name.empty()){
+		ERR("DB name cannot be empty");
+		return -1120;
+
+	}
 	if(is_connected==true){
 		ERR("already connected");
 		return 0;

@@ -15,7 +15,9 @@ namespace common {
 namespace misc {
 namespace data {
 
-class DBCassandra: public DBbase {
+class DBCassandra: public DBbase<DBCassandra>{
+
+	friend class DBbase<DBCassandra>;
 	CassCluster* cluster;
 	CassSession* session;
 
@@ -26,9 +28,16 @@ class DBCassandra: public DBbase {
 	const char* dataTypeToCassandra(dataTypes t);
 	CassError execStatement(CassStatement* statement);
 	bool is_connected;
+
+private:
+
+	//;
+
+	DBCassandra(const std::string name);
+	~DBCassandra();
+
 public:
-	DBCassandra(std::string name);
-	virtual ~DBCassandra();
+
 
 	int connect();
 		/**

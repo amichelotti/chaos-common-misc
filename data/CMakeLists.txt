@@ -14,7 +14,7 @@ ELSE()
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
 ENDIF()
 
-file (GLOB src *.cpp)
+file (GLOB src DataSet.cpp)
 
 
 
