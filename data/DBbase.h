@@ -15,9 +15,15 @@
 namespace common {
 namespace misc {
 namespace data {
+typedef struct {
+	uint64_t timestamp;
+	std::string key;
+	std::string data;
+} dbrecord_t;
 typedef std::map<int64_t,DataSet> datasetRecord_t;
 typedef std::pair<int64_t, std::string> kv_t;
-typedef std::vector<kv_t > blobRecord_t;
+typedef  std::pair< kv_t, std::string> dbmap_t;
+typedef std::vector< dbrecord_t > blobRecord_t;
 template <typename T>
 class DBbase {
 protected:
@@ -135,13 +141,15 @@ protected:
 	/**
 		 * Query a dataset(s) in the given range of time and keys
 		 * @param tblname table to address
-		 * @param key to use
+		 * @param key to use, if key is empty return a list of keys
 		 * @param startTime start search
 		 * @param endTime end search
 		 * @param set output set
 		 * @return the number of sets retrieved, negative if error
 		 * */
 	virtual int queryData(const std::string& tblname,const std::string& key,blobRecord_t& set,int64_t startTime=0,int64_t endTime=-1)=0;
+
+
 
 
 	/**
