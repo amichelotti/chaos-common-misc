@@ -103,17 +103,37 @@ int main(int argc,char**argv) {
 
 		std::cout<<"Raw Push:"<<tot<<" us" << " for "<<npushes<<" push,"<<" rate:"<<(npushes*1000000)/tot<<" psuh/s"<<std::endl;
 		////READ
-		blobRecord_t ret;
-		start=boost::posix_time::microsec_clock::local_time();
-		if(cassandra.queryData(dbtable,key,ret)!=0){
-			std::cerr<<"Error retriving data"<<std::endl;
-			return -1;
+		{
+			blobRecord_t ret;
+
+			start=boost::posix_time::microsec_clock::local_time();
+			if(cassandra.queryData(dbtable,key,ret)!=0){
+				std::cerr<<"Error retriving data"<<std::endl;
+				return -1;
+			}
+			tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+			std::cout<<"Raw Query with key:"<<tot<<" us" << " for "<<ret.size()<<" push,"<<" rate:"<<(ret.size()*1000000)/tot<<" push/s"<<std::endl;
+			for(blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+				std::cout<<"["<<i->timestamp<<"] "<<(i->key)<<":"<<(i->data)<<std::endl;
+			}
 		}
-		tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
-		std::cout<<"Raw Query:"<<tot<<" us" << " for "<<ret.size()<<" push,"<<" rate:"<<(ret.size()*1000000)/tot<<" push/s"<<std::endl;
-		for(blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
-			std::cout<<"["<<i->first<<"] "<<key<<":"<<(i->second)<<std::endl;
+
+
+		{
+					blobRecord_t ret;
+
+					start=boost::posix_time::microsec_clock::local_time();
+					if(cassandra.queryData(dbtable,"",ret)!=0){
+						std::cerr<<"Error retrieving data"<<std::endl;
+						return -1;
+					}
+					tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+					std::cout<<"Raw Query without key:"<<tot<<" us" << " for "<<ret.size()<<" push,"<<" rate:"<<(ret.size()*1000000)/tot<<" push/s"<<std::endl;
+					for(blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
+						std::cout<<"["<<i->timestamp<<"] "<<(i->key)<<":"<<(i->data)<<std::endl;
+					}
 		}
+
 	} else {
 		DataSet mydataset("typeTest","myCU");
 		double mydouble=0;

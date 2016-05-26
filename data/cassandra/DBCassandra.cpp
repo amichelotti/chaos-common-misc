@@ -597,9 +597,8 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 	CassError rc;
 	int rcc;
 	if(key.empty()){
-		ERR("key cannot be empty");
-		return -10;
-	}
+		query<<"SELECT * from "<<name<<"."<<tbl<<";";
+	} else {
 	if(startTime==0 && endTime==-1){
 			query<<"SELECT * from "<<name<<"."<<tbl<<" WHERE uuid = '"<<key<<"'"<<" order by event_time desc;";
 		} else if(startTime==-1 && endTime ==-1){
@@ -613,6 +612,7 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 				query<<"SELECT * from "<<name<<"."<<tbl<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<< "AND uuid = '"<<key<<"' order by event_time desc ;";
 			}
 		}
+	}
 	DPRINT("query:\"%s\"",query.str().c_str());
 	CassStatement* statement = cass_statement_new(query.str().c_str(), 0);
 	CassFuture* future = cass_session_execute(session, statement);
@@ -637,14 +637,16 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 			        const CassRow* row = cass_iterator_get_row(iterator);
 			        int64_t ts;
 			      	cass_value_get_int64(cass_row_get_column(row, 1),(int64_t*)&ts);
-			      	const char *key,*data;
+			      	const char *keys,*data;
 			      	size_t sizkey,sizdata;
-			      //	cass_value_get_string(cass_row_get_column(row, 0),&key,&sizkey);
+			      	cass_value_get_string(cass_row_get_column(row, 0),&keys,&sizkey);
 			      	cass_value_get_string(cass_row_get_column(row, 2),&data,&sizdata);
-			      	kv_t t;
+			      	dbrecord_t t;
 			      //	DPRINT("[%lld] %s %s",ts,key,data);
+			      	t.timestamp = ts;
+			      	t.key = keys;
+			      	t.data = data;
 
-			      	t = std::make_pair<int64_t,std::string>(ts,std::string(data));
 			      	set.push_back(t);
 
 
