@@ -65,6 +65,8 @@ protected:
 	std::string name; // identify the different instance
 	friend std::ostream& operator<<(std::ostream& in,const DataSet&ds);
 	static int type2size(dataTypes t);
+	void* addInt(const std::string& name,dataTypes type,void*pnt,int size,int internal=0);
+
 public:
 	DataSet();
 
@@ -75,20 +77,19 @@ public:
 
 	void* add(const std::string& name,dataTypes type,std::string& pnt,int size=0){
 	  DPRINT("adding %s, string type %d",name.c_str(),type);
-	  return add( name,type,(void*)pnt.c_str(), pnt.size());
+	  return addInt( name,type,(void*)&pnt, pnt.size(),0);
 	}
-	template<typename T>
-		void* add(const std::string& name,dataTypes type,T*pnt,int size=0){
+	template<typename T,typename Y>
+		void* add(const std::string& name,Y type,T*pnt,int size=0){
 	  DPRINT("adding %s, type* %d",name.c_str(),type);
 
-			return add( name,type,(void*)pnt, size==0?sizeof(T):size);
+			return addInt( name,(dataTypes)type,(void*)pnt, size==0?sizeof(T):size,0);
 		}
-	template<typename T>
-	void* add(const std::string& name,dataTypes type,T&pnt,int size=0){
+	template<typename T,typename Y>
+	void* add(const std::string& name,Y type,T&pnt,int size=0){
 	  DPRINT("adding %s, type %d",name.c_str(),type);
-		return add( name,type,(void*)&pnt, size==0?sizeof(T):size);
+		return addInt( name,(dataTypes)type,(void*)&pnt, size==0?sizeof(T):size,0);
 	}
-	void* add(const std::string& name,dataTypes type,void*pnt,int size,int internal=0);
 
 	void* add(const std::string& name,dataTypes type);
 	template<typename T>

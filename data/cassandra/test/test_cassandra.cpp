@@ -42,14 +42,19 @@ int main(int argc,char**argv) {
 	int npushes=NPUSHES;
 	std::string dbname,dbtable,key;
 	std::vector<std::string> servers;
+	std::string replication;
 	int enable_raw=0;
+	int n_threads=1;
 	po::options_description desc("options");
 
 	desc.add_options()("help","help");
 	desc.add_options()("server,s",po::value<std::vector<std::string> >(&servers),"contacting servers");
 	desc.add_options()("pushes,p",po::value<int >(&npushes)->default_value(NPUSHES),"number of pushes");
 	desc.add_options()("dbname,n",po::value<std::string >(&dbname)->default_value("chaos"),"db name");
-	desc.add_options()("dbtable,t",po::value<std::string >(&dbtable),"db table enable raw access mode");
+	desc.add_options()("threads,t",po::value<int >(&n_threads)->default_value(1),"number of threads ");
+	desc.add_options()("replication,r",po::value<std::string >(&replication)->default_value("1"),"replication factor (1= just one server keep data)");
+
+	desc.add_options()("dbtable,d",po::value<std::string >(&dbtable),"db table enable raw access mode");
 	desc.add_options()("key",po::value<std::string >(&key)->default_value("testCU"),"key in case of (raw access)");
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc,argv, desc),vm);
@@ -66,9 +71,18 @@ int main(int argc,char**argv) {
 			enable_raw=1;
 	}
 	DPRINT("connecting to %s",servers[0].c_str());
-	DBCassandra& cassandra=DBCassandra::getInstance("chaos");
+	DBCassandra& cassandra=DBCassandra::getInstance(dbname);
 
 	cassandra.addDBServer(servers);
+	{
+		std::stringstream ss;
+		ss<<n_threads;
+		cassandra.setDBParameters("threads",ss.str());
+	}
+
+
+	cassandra.setDBParameters("replication",replication);
+
 	if(cassandra.connect()!=0){
 		ERR("error connecting");
 		return -1;
@@ -85,7 +99,9 @@ int main(int argc,char**argv) {
 			  return -1;
 			}
 		}
-		std::cout<<"Raw Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+		uint64_t tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+
+		std::cout<<"Raw Push:"<<tot<<" us" << " for "<<npushes<<" push,"<<" rate:"<<(npushes*1000000)/tot<<" psuh/s"<<std::endl;
 		////READ
 		blobRecord_t ret;
 		start=boost::posix_time::microsec_clock::local_time();
@@ -93,7 +109,8 @@ int main(int argc,char**argv) {
 			std::cerr<<"Error retriving data"<<std::endl;
 			return -1;
 		}
-		std::cout<<"Raw Query:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<ret.size()<<" push"<<std::endl;
+		tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+		std::cout<<"Raw Query:"<<tot<<" us" << " for "<<ret.size()<<" push,"<<" rate:"<<(ret.size()*1000000)/tot<<" push/s"<<std::endl;
 		for(blobRecord_t::iterator i=ret.begin();i!=ret.end();i++){
 			std::cout<<"["<<i->first<<"] "<<key<<":"<<(i->second)<<std::endl;
 		}
@@ -103,10 +120,13 @@ int main(int argc,char**argv) {
 		int mint=0;
 		int64_t mint64=0;
 		std::string cs="ciao ciao";
+		double array[10];
 		mydataset.add("doubleval",TYPE_DOUBLE,mydouble);
 		mydataset.add("int32val",TYPE_INT32,mint);
 		mydataset.add("int64val",TYPE_INT64,mint64);
 		mydataset.add("stringval",TYPE_STRING,cs);
+		mydataset.add("myarray",TYPE_DOUBLE|TYPE_ACCESS_ARRAY,array,sizeof(array));
+
 		cassandra.dropData(mydataset);
 		boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
 		for(int cnt=0;cnt<npushes;cnt++){
@@ -114,13 +134,17 @@ int main(int argc,char**argv) {
 				mint++;
 				mint64+=1000;
 				cs+=".";
+				for(int cntt=0;cntt<sizeof(array)/sizeof(double);cntt++){
+					array[cntt]=cnt+1000*cntt;
+				}
 				mydataset.set("stringval",cs);
 				if(cassandra.pushData(mydataset,0)!=0){
 				  std::cerr<<"Error pushing"<<std::endl;
 				  return -1;
 				}
 		}
-				std::cout<<"Dataset Push:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+				uint64_t tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+				std::cout<<"Dataset Push:"<<tot<<" us" << " for "<<npushes<<" push, rate:"<<(npushes*1000000)/tot<<" push/s"<<std::endl;
 
 
 				datasetRecord_t ret,rlast,rfirst;
@@ -131,7 +155,8 @@ int main(int argc,char**argv) {
 					std::cerr<<"error retriving dataset";
 					return -1;
 				}
-				std::cout<<"Dataset Get:"<<(boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<<" us" << " for "<<npushes<<" push"<<std::endl;
+				tot=(boost::posix_time::microsec_clock::local_time()-start).total_microseconds();
+				std::cout<<"Dataset Get:"<<tot<<" us" << " for "<<npushes<<" push, rate:"<<(tot*npushes)/1000000<<" Hz"<<std::endl;
 
 				for(datasetRecord_t::iterator i=ret.begin();i!=ret.end();i++){
 					std::cout<<"["<<i->first<<"] "<<i->second<<std::endl;

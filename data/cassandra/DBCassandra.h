@@ -26,8 +26,14 @@ class DBCassandra: public DBbase<DBCassandra>{
 	prepared_t prepared;
 	void print_error(CassFuture* future);
 	const char* dataTypeToCassandra(dataTypes t);
-	CassError execStatement(CassStatement* statement);
+	CassError execStatement(CassStatement* statement,bool wait=true);
+	CassError waitAll();
 	bool is_connected;
+	int n_threads;
+	std::string replication_factor;
+	CassFuture**future_answer;
+	int curr_answer;
+	 uint64_t counter;
 
 private:
 

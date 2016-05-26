@@ -26,16 +26,25 @@ DataSet::~DataSet() {
 DataSet::DataSet(std::string uid,std::string _name):name(_name),uuid(uid){
 };
 
-void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int inter){
+void* DataSet::addInt(const std::string& name,dataTypes type,void*pnt,int size,int inter){
 	if(elem_by_name.find(name)!=elem_by_name.end())
 	  return 0;
 
 	DatasetElement_psh ds = boost::shared_ptr<DatasetElement>(new DatasetElement);
-	ds->buffer=pnt;
 	ds->size = size;
 	ds->name =name;
 	ds->type=type;
-	ds->molteplicity=size/type2size(type);
+	if((inter==0)&&(type&0xff) == TYPE_STRING){
+
+		std::string* a=(std::string*)pnt;
+		ds->molteplicity=size/a->size();
+		ds->buffer=(void*)a->c_str();
+
+	} else {
+		ds->molteplicity=size/type2size(type);
+		ds->buffer=pnt;
+
+	}
 	ds->internal+=inter;
 	DPRINT("adding element \"%s\" type %d, pnt 0x%x size %d, internal %d,molteplicity %d",name.c_str(),type,pnt,size,ds->internal,ds->molteplicity);
 	elems.push_back(ds);
@@ -74,19 +83,22 @@ void* DataSet::add(const std::string& name,dataTypes type,void*pnt,int size,int 
 void* DataSet::add(const std::string& name,dataTypes type){
 	int size=8;
 	void *pnt=NULL;
-	if(elem_by_name.find(name)!=elem_by_name.end()){
-		DPRINT("adding another element of type %d",type);
-		int tt=type;
-		tt+=(int)TYPE_ACCESS_ARRAY;
-		type =  (dataTypes)tt;
-		size  +=type2size(type);
+	std::map<std::string, DatasetElement_psh >::iterator i=elem_by_name.find(name);
+	if(i!=elem_by_name.end()){
+		int tt=type|(int)TYPE_ACCESS_ARRAY;
+		i->second->type=(dataTypes)tt;
+		i->second->size  +=type2size(type);
+		i->second->buffer = realloc(pnt,size);
+		i->second->molteplicity++;
+		DPRINT("adding another element of \"%s\"[%d] type %d, tot size %d",name.c_str(),i->second->molteplicity,type,i->second->size);
+		return i->second->buffer;
 	} else {
 		DPRINT("adding element \"%s\" with memory type %d",name.c_str(),type);
 		size  =type2size(type);
 	}
 
-	pnt = realloc(pnt,size);
-	return add(name,type,pnt, size,1);
+	pnt = malloc(size);
+	return addInt(name,type,pnt, size,1);
 	
 }
 
@@ -165,30 +177,36 @@ std::ostream& operator<<(std::ostream& in,const DataSet&d){
 }
 std::ostream& operator<<(std::ostream& in,const DatasetElement&ds){
 	std::stringstream ss;
-	switch(ds.type){
+	ss<<"{\"" <<ds.name<<"\":";
+	if(ds.type&TYPE_ACCESS_ARRAY){
+				ss<<"[";
+	}
+	for(int cnt=0;cnt<ds.molteplicity;cnt++){
+
+	switch(ds.type&0xFF){
 		case (TYPE_INT32):
-		  ss<<"{\""<<ds.name<<"\":"<<*(int32_t*)ds.buffer<<"}";
+		ss <<*(int32_t*)ds.buffer;
 
 
 		  break;
 		case (TYPE_INT64):
-		 ss<<"{\""<<ds.name<<"\":"<<*(int64_t*)ds.buffer<<"}";
+		 ss<<*(int64_t*)ds.buffer;
 
 		  break;
 		  //!Double 64 bit length
 		case (TYPE_DOUBLE):
-		ss<<"{\""<<ds.name<<"\":"<<*(double*)ds.buffer<<"}";
+		ss<<*(double*)ds.buffer;
 
 		  break;
 
 		case (TYPE_STRING):{
 			std::string tmp((const char*)ds.buffer);
-			ss<<"{\""<<ds.name<<"\": \""<<tmp<<"\"}";
+			ss<<"\""<<tmp<<"\"";
 
 		  break;
 		}
 		case (TYPE_BOOLEAN):
-		ss<<"{\""<<ds.name<<"\":"<<*(bool*)ds.buffer<<"}";
+		ss<<*(bool*)ds.buffer;
 
 		  break;
 		default:
@@ -196,6 +214,14 @@ std::ostream& operator<<(std::ostream& in,const DatasetElement&ds){
 		  break;
 
 		}
+	if((ds.type&TYPE_ACCESS_ARRAY)&&(cnt+1)<ds.molteplicity){
+		ss<<",";
+	}
+	}
+	if(ds.type&TYPE_ACCESS_ARRAY){
+					ss<<"]";
+	}
+	ss<<"}";
 	return in<<ss.str();
 }
 }}}

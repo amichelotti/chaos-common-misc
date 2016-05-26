@@ -4,7 +4,7 @@
  *  Created on: Feb 24, 2016
  *      Author: michelo
  */
-
+#undef DEBUG
 #include "DBCassandra.h"
 #include <sstream>
 #include <common/debug/core/debug.h>
@@ -23,6 +23,11 @@ DBCassandra::DBCassandra(const std::string name):DBbase<DBCassandra>(name){
 	cluster=NULL;
 	session=NULL;
 	is_connected = false;
+	n_threads=1;
+	future_answer=NULL;
+	curr_answer=0;
+	replication_factor="1";
+	counter =0;
 
 }
 
@@ -68,17 +73,62 @@ void DBCassandra::print_error(CassFuture* future) {
   cass_future_error_message(future, &message, &message_length);
   ERR("Error: %.*s", (int)message_length, message);
 }
+CassError DBCassandra::waitAll(){
+	CassError rc=CASS_OK;
+	for(int cnt=0;(future_answer!=NULL) && (cnt<n_threads);cnt++){
+			if(future_answer[cnt]!=NULL){
+				cass_future_wait(future_answer[cnt]);
+				rc = cass_future_error_code(future_answer[cnt]);
+				if (rc != CASS_OK) {
+							  print_error(future_answer[cnt]);
+				}
+				cass_future_free(future_answer[cnt]);
+				future_answer[cnt]=NULL;
+			}
+		}
+	return rc;
 
-CassError DBCassandra::execStatement(CassStatement* statement){
+}
+CassError DBCassandra::execStatement(CassStatement* statement,bool wait){
 	CassError rc = CASS_OK;
-	CassFuture* future = cass_session_execute(session, statement);
-	cass_future_wait(future);
-	rc = cass_future_error_code(future);
-	if (rc != CASS_OK) {
-		  print_error(future);
+	CassFuture* future ;
+	if(wait){
+		waitAll();
 	}
 
-	cass_future_free(future);
+	if(wait){
+		future = cass_session_execute(session, statement);
+
+		cass_future_wait(future);
+		rc = cass_future_error_code(future);
+		if (rc != CASS_OK) {
+			  print_error(future);
+		}
+
+		cass_future_free(future);
+
+	} else {
+		int off=curr_answer%n_threads;
+		if(curr_answer>=n_threads){
+			if(cass_future_ready(future_answer[off])==false){
+				DPRINT("waiting end request %d-%d id 0x%x",curr_answer,off,future_answer[off]);
+				cass_future_wait(future_answer[off]);
+			}
+			rc = cass_future_error_code(future_answer[off]);
+			if (rc != CASS_OK) {
+					  print_error(future_answer[off]);
+			}
+			cass_future_free(future_answer[off]);
+
+		}
+		future = cass_session_execute(session, statement);
+		DPRINT("executing statement, id batch %d-%d, id 0x%x",curr_answer,off,future)
+
+		future_answer[off]= future;
+
+		curr_answer++;
+
+	}
 	cass_statement_free(statement);
 	return rc;
 }
@@ -101,9 +151,25 @@ int DBCassandra::connect(){
 		return -1120;
 
 	}
+
 	if(is_connected==true){
 		ERR("already connected");
 		return 0;
+	}
+	if(kv_parameters.find("threads")!=kv_parameters.end()){
+		int th=atoi(kv_parameters["threads"].c_str());
+		if(th>1){
+
+			n_threads=th;
+		}
+	}
+	if(future_answer==NULL){
+		DPRINT("allocating %d futures",n_threads);
+		future_answer = (CassFuture**) calloc(n_threads,sizeof(CassFuture*));
+
+	}
+	if(kv_parameters.find("replication")!=kv_parameters.end()){
+		replication_factor=kv_parameters["replication"];
 	}
 	cluster = cass_cluster_new();
 	if(cluster == NULL){
@@ -142,7 +208,7 @@ int DBCassandra::connect(){
 
 	  if(rc==CASS_OK){
 	    std::stringstream ss;
-	    ss<<"CREATE KEYSPACE IF NOT EXISTS "<<name<<" WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };";
+	    ss<<"CREATE KEYSPACE IF NOT EXISTS "<<name<<" WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '"<<replication_factor<<"' };";
 	    rcc=executeQuery(ss.str().c_str());
 	    if(rcc!=0){
 	      ERR("error creating KEYSPACE %s",name.c_str());
@@ -214,15 +280,15 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	}
 	//	DPRINT("pushing %lld",ts);
 	cass_statement_bind_string(statement, 0, dset.getName().c_str());
-	cass_statement_bind_int64(statement, 1, (int64_t)ts);
+	cass_statement_bind_int64(statement, 1, (int64_t)ts + counter++);
 	cnt=2;
 	CassCollection* collection = NULL;
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
-
+		DPRINT("[%d] binding %s %s[%d] size %d, of type %d @0x%x",cnt,((*i)->type & TYPE_ACCESS_ARRAY)?"array":"scalar",(*i)->name.c_str(),(*i)->molteplicity,(*i)->size,(*i)->type&0xff,(*i)->buffer);
 		if((*i)->type & TYPE_ACCESS_ARRAY){
-			void* ptr=**i;
+			void* ptr=(*i)->buffer;
 			collection = cass_collection_new(CASS_COLLECTION_TYPE_LIST, (*i)->molteplicity);
-			DPRINT("binding array %s[%d] of %d",(*i)->name.c_str(),(*i)->molteplicity,(*i)->type)
+
 			for(int cntt=0;cntt<(*i)->molteplicity;cntt++){
 
 				switch((*i)->type&0xff){
@@ -246,34 +312,38 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 						ERR("type array not supported %s %d",(*i)->name.c_str(),(*i)->type);
 						return -110;
 				}
-				  cass_statement_bind_collection(statement, cnt, collection);
-				  cass_collection_free(collection);
+
 
 
 			}
+
+			cass_statement_bind_collection_by_name(statement, (*i)->name.c_str(), collection);
+			cass_collection_free(collection);
 		} else {
 			switch((*i)->type){
 				case (TYPE_INT32):
-					  rc=cass_statement_bind_int32(statement, cnt, (int32_t)**i);
+
+					  rc=cass_statement_bind_int32_by_name(statement, (*i)->name.c_str(), (int32_t)**i);
 						break;
 				case (TYPE_INT64):
-					rc=cass_statement_bind_int64(statement, cnt, (int64_t)**i);
+					rc=cass_statement_bind_int64_by_name(statement, (*i)->name.c_str(), (int64_t)**i);
 					break;
 							//!Double 64 bit length
 				case (TYPE_DOUBLE):
-					rc=cass_statement_bind_double(statement, cnt, (double)**i);
+					rc=cass_statement_bind_double_by_name(statement, (*i)->name.c_str(), (double)**i);
 					break;
 
-				case (TYPE_STRING):{
-					rc=cass_statement_bind_string(statement, cnt, (const char*)(*i)->buffer);
+				/*case (TYPE_STRING):{
+					rc=cass_statement_bind_string_by_name_n(statement, (*i)->name.c_str(), (const char*)(*i)->buffer,(*i)->size);
 					break;
-				}
+				}*/
 				case (TYPE_BOOLEAN):
-					rc=cass_statement_bind_bool(statement, cnt, (cass_bool_t)**i);
+					rc=cass_statement_bind_bool_by_name(statement, (*i)->name.c_str(), (cass_bool_t)**i);
 					break;
+
 				default:
-					rc=cass_statement_bind_string_n(statement,cnt,(const char*)(*i)->buffer,(*i)->size);
-					break;
+					rc=cass_statement_bind_string_by_name_n(statement, (*i)->name.c_str(), (*i)->name.size(),(const char*)(*i)->buffer,(*i)->size);
+				break;
 
 			}
 		}
@@ -284,7 +354,7 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 
 		}
 	}
-	rc= execStatement(statement);
+	rc= execStatement(statement,false);
 	return rc;
 }
 int DBCassandra::pushData(const std::string &tbl,const std::string &key,std::string& ds,uint64_t ts){
@@ -337,7 +407,7 @@ int DBCassandra::pushData(const std::string &tbl,const std::string &key,std::str
 	cass_statement_bind_string(statement, 0, key.c_str());
 	cass_statement_bind_int64(statement, 1, (int64_t)ts);
 	cass_statement_bind_string_n(statement, 2, ds.c_str(),ds.size());
-	rc= execStatement(statement);
+	rc= execStatement(statement,true);
 	return rc;
 
 }
@@ -383,14 +453,22 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        const CassRow* row = cass_iterator_get_row(iterator);
 		        int64_t ts;
 		        cnt=1;
-		        cass_value_get_int64(cass_row_get_column(row, cnt),(int64_t*)&ts);
+		        const CassValue*col_value=cass_row_get_column(row, cnt);
+		        cass_value_get_int64(col_value,(int64_t*)&ts);
 		        cnt++;
 		        DataSet tmp("result","res");
 		        for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
 		        	CassIterator * items_iterator;
+		        	int cnti=0;
+		        	col_value=cass_row_get_column_by_name(row, (*i)->name.c_str());
+
+        			DPRINT("accessing[%d] %s of type %d, name %s[%d] cass type:0x%x",cnt,((*i)->type & TYPE_ACCESS_ARRAY)?"array":"scalar",(*i)->type&0xff, (*i)->name.c_str(),(*i)->molteplicity,cass_value_type(col_value));
+
 		        	if((*i)->type & TYPE_ACCESS_ARRAY){
-		        				items_iterator = cass_iterator_from_collection(cass_row_get_column(row, cnt));
+		        				items_iterator = cass_iterator_from_collection(col_value);
+
 		        				 while (cass_iterator_next(items_iterator)) {
+		        					 DPRINT("iterating %d,%d",cnt,cnti++);
 		        					 switch((*i)->type&0xff){
 		        					 case (TYPE_INT32):{
 		        					 		     void* ptr=tmp.add((*i)->name,(*i)->type);
@@ -421,7 +499,7 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        				switch((*i)->type){
 		        				case (TYPE_INT32):{
 		        					void* ptr=tmp.add((*i)->name,(*i)->type);
-									cass_value_get_int32(cass_row_get_column(row, cnt),(int32_t*)ptr);
+									cass_value_get_int32(col_value,(int32_t*)ptr);
 									//tmp.add((*i)->name,(*i)->type,t);
 									break;
 		        				}
@@ -429,19 +507,19 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        				case (TYPE_INT64):{
 
 		        					void* ptr=tmp.add((*i)->name,(*i)->type);
-									cass_value_get_int64(cass_row_get_column(row, cnt),(int64_t*)ptr);
+									cass_value_get_int64(col_value,(int64_t*)ptr);
 									break;
 		        				}
 		        				            //!Double 64 bit length
 		        				case (TYPE_DOUBLE):{
 			        					void* ptr=tmp.add((*i)->name,(*i)->type);
-										cass_value_get_double(cass_row_get_column(row, cnt),(double*)ptr);
+										cass_value_get_double(col_value,(double*)ptr);
 										break;
 			        				}
 
 		        				case (TYPE_BOOLEAN):{
 		        					void* ptr=tmp.add((*i)->name,(*i)->type);
-		        					cass_value_get_bool(cass_row_get_column(row, cnt),(cass_bool_t*)ptr);
+		        					cass_value_get_bool(col_value,(cass_bool_t*)ptr);
 		        					break;
 		        				}
 
@@ -449,7 +527,7 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        				default:{
 		        					const char *str;
 		        					size_t siz;
-									cass_value_get_string(cass_row_get_column(row, cnt),&str,&siz);
+									cass_value_get_string(col_value,&str,&siz);
 									tmp.add((*i)->name,(*i)->type);
 									tmp.set((*i)->name,(void*)str,siz);
 		        					break;
@@ -506,6 +584,12 @@ int DBCassandra::disconnect(){
 	 DPRINT("close session");
 	}
 	is_connected = false;
+	waitAll();
+	if(future_answer!=NULL){
+			DPRINT("deallocating %d futures",n_threads);
+			free (future_answer);
+			future_answer=NULL;
+		}
 
 }
 int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRecord_t& set,int64_t startTime,int64_t endTime){

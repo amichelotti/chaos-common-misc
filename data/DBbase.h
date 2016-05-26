@@ -64,7 +64,7 @@ protected:
 			return 0;
 		}
 
-	int addDBServer(std::vector<std::string> urls){
+	virtual int addDBServer(std::vector<std::string> urls){
 		for(std::vector<std::string>::iterator i=urls.begin();i!=urls.end();i++){
 			addDBServer(*i);
 		}
@@ -86,7 +86,7 @@ protected:
 			 * @param value parameter value
 			 * @return 0 on success
 			 * */
-	 int setDBParameters(std::string key,std::string value){
+	 virtual int setDBParameters(std::string key,std::string value){
 		  kv_parameters[key]=value;
 	  }
 
