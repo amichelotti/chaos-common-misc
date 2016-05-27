@@ -618,9 +618,9 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 	CassFuture* future = cass_session_execute(session, statement);
 	rc = cass_future_error_code(future);
 		if (rc != CASS_OK) {
+			print_error(future);
 			cass_future_free(future);
 			cass_statement_free(statement);
-			print_error(future);
 			return -1;
 		} else {
 			 const CassResult* result = cass_future_get_result(future);

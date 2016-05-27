@@ -13,9 +13,10 @@ namespace data {
 
 
 std::ostream& operator<<(std::ostream& out,blobRecord_t& ret){
-	 out<<"{[";
+
+	 out<<"{keys:[";
 	 for(int cnt=0;cnt<ret.size();cnt++){
-		out<<ret[cnt].key;
+		out<<"\""<<ret[cnt].key<<"\"";
 		if((cnt+1)<ret.size())
 			  out<<",";
 	 }
