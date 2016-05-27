@@ -159,6 +159,7 @@ protected:
 };
 template <typename T> boost::mutex DBbase<T>::mutex;
 template <typename T> std::map<std::string,T*> DBbase<T>::instances;
+std::ostream& operator<<(std::ostream& out,blobRecord_t&);
 
 } /* namespace data */
 } /* namespace misc */

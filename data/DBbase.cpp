@@ -10,14 +10,22 @@
 namespace common {
 namespace misc {
 namespace data {
-template <typename T>
-int DBbase<T>::addDBServer(std::vector<std::string> urls)
 
-template <typename T>
-int DBbase<T>::setDBName(std::string _name)
-template <typename T>
-int DBbase<T>::setDBParameters(std::string key,std::string value)
+
+std::ostream& operator<<(std::ostream& out,blobRecord_t& ret){
+	 out<<"{[";
+	 for(int cnt=0;cnt<ret.size();cnt++){
+		out<<ret[cnt].key;
+		if((cnt+1)<ret.size())
+			  out<<",";
+	 }
+  out<<"]}";
+  return out;
+}
+
 } /* namespace data */
 } /* namespace misc */
 } /* namespace common */
+
+
 
