@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.6)
 project(common_misc_data_cassandra)
 IF (DEFINED ENV{CHAOS_BUNDLE} )
   include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
+  SET( CMAKE_CHAOS  $ENV{CHAOS_CMAKE_FLAGS})
+  SET( CROSS_HOST "--host=$ENV{CHAOS_CROSS_HOST}")
+  MESSAGE(STATUS "cross paramters ${CROSS_HOST} CMAKE: ${CMAKE_CHAOS}")
 ELSE()
   MESSAGE(STATUS "STANDALONE, environment CHAOS_BUNDLE defined")
   IF (NOT CMAKE_INSTALL_PREFIX) 
@@ -10,6 +13,8 @@ ELSE()
     MESSAGE(STATUS "install prefix ${CMAKE_INSTALL_PREFIX}")
   ENDIF()
   INCLUDE_DIRECTORIES(. ../..)
+  SET( CMAKE_CHAOS "")
+  SET( CROSS_HOST "")
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
 ENDIF()
 
@@ -54,7 +59,7 @@ if(NOT CUSTOMLIB)
   endif()
 
   execute_process( 
-    COMMAND ./configure  --with-pic --enable-shared=false --enable-static=true --prefix=${CMAKE_INSTALL_PREFIX}
+    COMMAND ./configure  --with-pic --enable-shared=false --enable-static=true --prefix=${CMAKE_INSTALL_PREFIX} ${CROSS_HOST}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/libuv
     RESULT_VARIABLE custom_err
     OUTPUT_VARIABLE out_mod
@@ -84,10 +89,10 @@ if(NOT CUSTOMLIB)
   # if( custom_err)
   #   message(FATAL_ERROR "autogen ${out_mod} ${custom_err}")
   # endif()
-
+  SET(FF "${CMAKE_CXX_FLAGS} -Wno-narrowing -Wno-type-limits")
   message(STATUS "creating makefile cpp-driver configuring to ${CMAKE_INSTALL_PREFIX}")
   execute_process( 
-    COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DCASS_BUILD_STATIC=ON -DCASS_USE_STATIC_LIBS=ON -DCASS_USE_OPENSSL=OFF -DCASS_INCLUDES=${CMAKE_CURRENT_SOURCE_DIR}/external/libuv/include
+    COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DCMAKE_CXX_FLAGS=${FF} -DCASS_BUILD_STATIC=ON -DCASS_USE_STATIC_LIBS=ON -DCASS_USE_OPENSSL=OFF -DCASS_INCLUDES=${CMAKE_CURRENT_SOURCE_DIR}/external/libuv/include $CHAOS_CMAKE_FLAGS ${CMAKE_CHAOS} .
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/cpp-driver
     RESULT_VARIABLE _err
     OUTPUT_VARIABLE out_mod
