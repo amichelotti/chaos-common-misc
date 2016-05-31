@@ -29,7 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "DBCassandra.h"
+#include <common/misc/data/core/DBbaseFactory.h>
 #include <boost/program_options.hpp>
 #include <boost/chrono.hpp>
 #include <boost/date_time.hpp>
@@ -43,6 +43,7 @@ int main(int argc,char**argv) {
 	std::string dbname,dbtable,key;
 	std::vector<std::string> servers;
 	std::string replication;
+	std::string dbtype;
 	int enable_raw=0;
 	int n_threads=1;
 	po::options_description desc("options");
@@ -53,6 +54,7 @@ int main(int argc,char**argv) {
 	desc.add_options()("dbname,n",po::value<std::string >(&dbname)->default_value("chaos"),"db name");
 	desc.add_options()("threads,t",po::value<int >(&n_threads)->default_value(1),"number of threads ");
 	desc.add_options()("replication,r",po::value<std::string >(&replication)->default_value("1"),"replication factor (1= just one server keep data)");
+	desc.add_options()("dbtype",po::value<std::string >(&dbtype)->default_value("cassandra"),"DB type to use");
 
 	desc.add_options()("dbtable,d",po::value<std::string >(&dbtable),"db table enable raw access mode");
 	desc.add_options()("key",po::value<std::string >(&key)->default_value("testCU"),"key in case of (raw access)");
@@ -71,19 +73,22 @@ int main(int argc,char**argv) {
 			enable_raw=1;
 	}
 	DPRINT("connecting to %s",servers[0].c_str());
-	DBCassandra& cassandra=DBCassandra::getInstance(dbname);
-
-	cassandra.addDBServer(servers);
+	DBbase* db=DBbaseFactory::getInstance(dbtype,dbname);
+	if(db == NULL){
+		ERR("cannot retrieve database %s",dbtype.c_str());
+		return -1;
+	}
+	db->addDBServer(servers);
 	{
 		std::stringstream ss;
 		ss<<n_threads;
-		cassandra.setDBParameters("threads",ss.str());
+		db->setDBParameters("threads",ss.str());
 	}
 
 
-	cassandra.setDBParameters("replication",replication);
+	db->setDBParameters("replication",replication);
 
-	if(cassandra.connect()!=0){
+	if(db->connect()!=0){
 		ERR("error connecting");
 		return -1;
 	}
@@ -94,7 +99,7 @@ int main(int argc,char**argv) {
 			std::stringstream ss;
 			ss<<"{\"prova\":"<<cnt<<"}";
 			std::string ds=ss.str();
-			if(cassandra.pushData(dbtable,key,ds,0)!=0){
+			if(db->pushData(dbtable,key,ds,0)!=0){
 			  std::cerr<<"Error pushing"<<std::endl;
 			  return -1;
 			}
@@ -107,7 +112,7 @@ int main(int argc,char**argv) {
 			blobRecord_t ret;
 
 			start=boost::posix_time::microsec_clock::local_time();
-			if(cassandra.queryData(dbtable,key,ret)!=0){
+			if(db->queryData(dbtable,key,ret)!=0){
 				std::cerr<<"Error retriving data"<<std::endl;
 				return -1;
 			}
@@ -123,7 +128,7 @@ int main(int argc,char**argv) {
 					blobRecord_t ret;
 
 					start=boost::posix_time::microsec_clock::local_time();
-					if(cassandra.queryData(dbtable,"",ret)!=0){
+					if(db->queryData(dbtable,"",ret)!=0){
 						std::cerr<<"Error retrieving data"<<std::endl;
 						return -1;
 					}
@@ -147,7 +152,7 @@ int main(int argc,char**argv) {
 		mydataset.add("stringval",TYPE_STRING,cs);
 		mydataset.add("myarray",TYPE_DOUBLE|TYPE_ACCESS_ARRAY,array,sizeof(array));
 
-		cassandra.dropData(mydataset);
+		db->dropData(mydataset);
 		boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
 		for(int cnt=0;cnt<npushes;cnt++){
 				mydouble+=2.0;
@@ -158,7 +163,7 @@ int main(int argc,char**argv) {
 					array[cntt]=cnt+1000*cntt;
 				}
 				mydataset.set("stringval",cs);
-				if(cassandra.pushData(mydataset,0)!=0){
+				if(db->pushData(mydataset,0)!=0){
 				  std::cerr<<"Error pushing"<<std::endl;
 				  return -1;
 				}
@@ -171,7 +176,7 @@ int main(int argc,char**argv) {
 				 start=boost::posix_time::microsec_clock::local_time();
 
 				//get all
-				if(cassandra.queryData(mydataset,ret)!=0){
+				if(db->queryData(mydataset,ret)!=0){
 					std::cerr<<"error retriving dataset";
 					return -1;
 				}
@@ -184,7 +189,7 @@ int main(int argc,char**argv) {
 				//get last
 
 				//get last
-				if(cassandra.queryData(mydataset,rlast,-1,-1)!=0){
+				if(db->queryData(mydataset,rlast,-1,-1)!=0){
 					std::cerr<<"error retriving dataset";
 					return -1;
 				}
@@ -194,7 +199,7 @@ int main(int argc,char**argv) {
 			}
 
 				//get first
-								if(cassandra.queryData(mydataset,rfirst,0,0)!=0){
+								if(db->queryData(mydataset,rfirst,0,0)!=0){
 									std::cerr<<"error retriving dataset";
 									return -1;
 								}

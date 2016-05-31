@@ -130,10 +130,7 @@ ENDIF()
 
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
-ADD_EXECUTABLE(test_cassandra test/test_cassandra.cpp)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} cassandra_static common_misc_data uv common_debug ${libs} boost_log boost_system boost_thread)
-TARGET_LINK_LIBRARIES(test_cassandra ${PROJECT_NAME} common_debug ${libs} boost_program_options boost_system boost_thread)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} cassandra_static uv common_debug ${libs} boost_log boost_system boost_thread)
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data/cassandra)
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
-INSTALL_TARGETS(/bin test_cassandra)

@@ -7,17 +7,17 @@
 
 #ifndef DATA_CASSANDRA_DBCASSANDRA_H_
 #define DATA_CASSANDRA_DBCASSANDRA_H_
-#include <common/misc/data/DBbase.h>
+#include <common/misc/data/core/DBbase.h>
 #include <vector>
 #include "cassandra.h"
-
+#include <common/misc/data/core/DBbaseFactory.h>
 namespace common {
 namespace misc {
 namespace data {
 
-class DBCassandra: public DBbase<DBCassandra>{
+class DBCassandra: public DBbase{
 
-	friend class DBbase<DBCassandra>;
+	friend class DBbaseFactory;
 	CassCluster* cluster;
 	CassSession* session;
 

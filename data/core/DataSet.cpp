@@ -9,8 +9,22 @@
 #include <string.h>
 #include <sstream>
 #include <boost/date_time.hpp>
-using namespace common::misc::data;
+using namespace ::common::misc::data;
 
+
+#define A 54059 /* a prime */
+#define B 76963 /* another prime */
+#define C 86969 /* yet another prime */
+std::size_t ::common::misc::data::simpleHash(const char* s,int size)
+{
+  int cnt=0;
+  std::size_t h = 31 /* also prime */;
+   while(cnt<size){
+     h = (h * A) ^ (s[cnt] * B);
+     cnt++;
+   }
+   return h; // or return h % C;
+}
 DataSet::DataSet() {
 	// TODO Auto-generated constructor stub
 	name="noname";
@@ -23,7 +37,10 @@ DataSet::~DataSet() {
  // DPRINT("destroying %s",name.c_str());
 }
 
-DataSet::DataSet(std::string uid,std::string _name):name(_name),uuid(uid){
+DataSet::DataSet(const std::string& uid,const std::string& _name):name(_name),uuid(uid){
+	std::replace(name.begin(),name.end(),'/','_');
+	std::replace(uuid.begin(),uuid.end(),'/','_');
+
 };
 
 void* DataSet::addInt(const std::string& name,dataTypes type,void*pnt,int size,int inter){
@@ -95,6 +112,7 @@ void* DataSet::add(const std::string& name,dataTypes type){
 	} else {
 		DPRINT("adding element \"%s\" with memory type %d",name.c_str(),type);
 		size  =type2size(type);
+
 	}
 
 	pnt = malloc(size);
@@ -131,13 +149,22 @@ void* DataSet::add(const std::string& name,dataTypes type,int size){
 int DataSet::set(int idx,void*ptr,int size){
     if(idx<elems.size()){
       if(elems[idx]->internal){
-	elems[idx]->resize(size);
-	memcpy(elems[idx]->buffer,ptr,size);
+    	  if(elems[idx]->buffer){
+    		  free(elems[idx]->buffer);
+    	  }
 
-      } else {
-	elems[idx]->buffer=ptr;
-	elems[idx]->size=size;
       }
+      common::misc::data::dataTypes type =  elems[idx]->type;
+      if((size > type2size(type))&&((size % type2size(type)) == 0)){
+    	  int tt=elems[idx]->type|(int)TYPE_ACCESS_ARRAY;
+          elems[idx]->type=(dataTypes)tt;
+          elems[idx]->molteplicity=size / type2size(type);
+
+      }
+
+	  elems[idx]->buffer=ptr;
+	  elems[idx]->size=size;
+
       return 0;
     }
     return -1;

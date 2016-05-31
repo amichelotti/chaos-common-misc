@@ -13,9 +13,13 @@ ELSE()
   INCLUDE_DIRECTORIES(.  ${CMAKE_INSTALL_PREFIX}/include)
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
 ENDIF()
+ADD_DEFINITIONS(-fPIC)
 
-file (GLOB src DataSet.cpp DBbase.cpp)
+ADD_SUBDIRECTORY(cassandra)
+ADD_SUBDIRECTORY(btf)
 
+
+file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp)
 
 
 IF(BUILD_FORCE_STATIC)
@@ -23,16 +27,17 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 ELSE()
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
 ENDIF()
-
-
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} common_debug)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} common_misc_data_cassandra cassandra_static common_debug)
 INSTALL_TARGETS(/lib  ${PROJECT_NAME})
 
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data)
 
-ADD_SUBDIRECTORY(cassandra)
-ADD_SUBDIRECTORY(btf)
+
+ADD_EXECUTABLE(test_db test/test_db.cpp)
+
+TARGET_LINK_LIBRARIES(test_db ${PROJECT_NAME} common_debug ${libs} boost_program_options boost_system boost_thread)
+INSTALL_TARGETS(/bin test_db)
 
 # install(DIRECTORY DESTINATION include/driver/daq)  
 

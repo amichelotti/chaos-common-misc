@@ -23,11 +23,7 @@ file (GLOB src *.cpp)
 
 
 
-IF(BUILD_FORCE_STATIC)
 ADD_LIBRARY(common_misc_wavegenerators STATIC ${src})
-ELSE()
-ADD_LIBRARY(common_misc_wavegenerators SHARED ${src})
-ENDIF()
 
 
 ADD_EXECUTABLE(wave_test test/main.cpp)

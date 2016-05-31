@@ -18,7 +18,7 @@ namespace data {
     int64_t mslong = (long long) tp.tv_sec * 1000L + tp.tv_usec / 1000; //get current timestamp in milliseconds
     return mslong;
   }
-DBCassandra::DBCassandra(const std::string name):DBbase<DBCassandra>(name){
+DBCassandra::DBCassandra(const std::string _name){
 	// TODO Auto-generated constructor stub
 	cluster=NULL;
 	session=NULL;
@@ -28,6 +28,7 @@ DBCassandra::DBCassandra(const std::string name):DBbase<DBCassandra>(name){
 	curr_answer=0;
 	replication_factor="1";
 	counter =0;
+	name = _name;
 
 }
 

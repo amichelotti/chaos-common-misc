@@ -70,7 +70,7 @@ protected:
 public:
 	DataSet();
 
-	DataSet(std::string uid,std::string name);
+	DataSet(const std::string& uid,const std::string& name);
 	virtual ~DataSet();
 	void setDataSetName(const std::string &_name){name=_name;}
 	void setDataSetUID(const std::string &_name){uuid=_name;}
@@ -113,6 +113,7 @@ public:
 };
 	std::ostream& operator<<(std::ostream& in,const DataSet&d);
 
+	std::size_t simpleHash(const char* buf,int size);
 }
 }
 }

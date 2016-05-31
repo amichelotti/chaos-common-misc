@@ -24,31 +24,28 @@ typedef std::map<int64_t,DataSet> datasetRecord_t;
 typedef std::pair<int64_t, std::string> kv_t;
 typedef  std::pair< kv_t, std::string> dbmap_t;
 typedef std::vector< dbrecord_t > blobRecord_t;
-template <typename T>
+
+class DBbaseFactory;
+
+
 class DBbase {
+
+private:
+	DBbase(const std::string _name):name(_name){}
+	friend class DBbaseFactory;
+
 protected:
 	std::vector <std::string> servers;
 	std::string name;
 	std::map<std::string,std::string> kv_parameters;
 
 
-	static std::map<std::string, T*> instances;
 
-	static boost::mutex mutex;
 
 	public:
-	static T& getInstance(const std::string& name ){
-			boost::mutex::scoped_lock l(mutex);
-			typename std::map<std::string, T*>::iterator i=instances.find(name);
-			if(i!=instances.end()){
-				return *(i->second);
-			}
-			T*ret=new T(name);
-			instances[name]=ret;
-			return *ret;
-		}
+
 	DBbase(){}
-	DBbase(const std::string _name):name(_name){}
+
 	virtual ~DBbase(){}
 
 
@@ -57,44 +54,22 @@ protected:
 	 * @param url server address/url
 	 * @return 0 on success
 	 * */
-	 int addDBServer(std::string url){
-			std::vector<std::string>::iterator i;
-			for(i=servers.begin();i!=servers.end();i++){
-				if(*i == url){
-					return -1;
-				}
+	 int addDBServer(std::string url);
 
-			}
-
-			servers.push_back(url);
-			return 0;
-		}
-
-	virtual int addDBServer(std::vector<std::string> urls){
-		for(std::vector<std::string>::iterator i=urls.begin();i!=urls.end();i++){
-			addDBServer(*i);
-		}
-		return 0;
-	}
+	virtual int addDBServer(std::vector<std::string> urls);
 	/**
 		 * Set the database name
 		 * @param name database name
 		 * @return 0 on success
 	*/
-	 int setDBName(std::string _name){
-		 name = _name;
-		 return 0;
-
-	 }
+	 int setDBName(std::string _name);
 	/**
 			 * Set the database parameters
 			 * @param key parameter name
 			 * @param value parameter value
 			 * @return 0 on success
 			 * */
-	 virtual int setDBParameters(std::string key,std::string value){
-		  kv_parameters[key]=value;
-	  }
+	 virtual int setDBParameters(std::string key,std::string value);
 
 
 	/**
@@ -157,9 +132,7 @@ protected:
 	 */
 	virtual int dropData(const DataSet&)=0;
 };
-template <typename T> boost::mutex DBbase<T>::mutex;
-template <typename T> std::map<std::string,T*> DBbase<T>::instances;
-std::ostream& operator<<(std::ostream& out,blobRecord_t&);
+	std::ostream& operator<<(std::ostream& out,blobRecord_t&);
 
 } /* namespace data */
 } /* namespace misc */
