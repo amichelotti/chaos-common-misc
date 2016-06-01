@@ -27,7 +27,7 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 ELSE()
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} common_misc_data_cassandra cassandra_static common_debug boost_date_time)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} common_misc_data_cassandra cassandra_static jsoncpp common_debug boost_date_time)
 INSTALL_TARGETS(/lib  ${PROJECT_NAME})
 
 FILE(GLOB headers "*.h")

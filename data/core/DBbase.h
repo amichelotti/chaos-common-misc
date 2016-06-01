@@ -12,13 +12,15 @@
 #include <map>
 #include "DataSet.h"
 #include <boost/thread/mutex.hpp>
+#include <ostream>
 namespace common {
 namespace misc {
 namespace data {
-typedef struct {
+typedef struct _data_ {
 	uint64_t timestamp;
 	std::string key;
 	std::string data;
+	static char format;
 } dbrecord_t;
 typedef std::map<int64_t,DataSet> datasetRecord_t;
 typedef std::pair<int64_t, std::string> kv_t;
@@ -113,6 +115,14 @@ protected:
 	 * @return the number of dataset retrieved, negative if error
 	 * */
 	virtual int queryData(const DataSet& ds,datasetRecord_t& set ,int64_t startTime=0,int64_t endTime=-1)=0;
+
+	/**
+	 * Use json has query params
+	 * @param json_out [out]
+	 * @param json_param [in] the query string {"tbl":string,"key":string,"ts":string,"te":string,"select":[string,string]}
+	 * */
+	int queryData(std::string& json_out,const std::string& json_param);
+
 	/**
 		 * Query a dataset(s) in the given range of time and keys
 		 * @param tblname table to address
@@ -133,6 +143,8 @@ protected:
 	virtual int dropData(const DataSet&)=0;
 };
 	std::ostream& operator<<(std::ostream& out,blobRecord_t&);
+	std::ostream& chformat(std::ostream& in,char f);
+	int64_t convertToEpoch(const std::string& st);
 
 } /* namespace data */
 } /* namespace misc */
