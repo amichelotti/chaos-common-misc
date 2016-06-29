@@ -20,7 +20,7 @@
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.229480086" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix"/>
 							<option id="cdt.managedbuild.option.gnu.cross.path.473087094" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1620108833" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder id="cdt.managedbuild.builder.gnu.cross.378509196" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder arguments="install" command="make" id="cdt.managedbuild.builder.gnu.cross.378509196" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1615546408" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option id="gnu.c.compiler.option.include.paths.272145064" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${CHAOS_PREFIX}/include&quot;"/>
@@ -60,9 +60,6 @@
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.123693403;cdt.managedbuild.toolchain.gnu.cross.base.123693403.522455806;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1827851192;cdt.managedbuild.tool.gnu.cpp.compiler.input.1886556143">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.972861367;cdt.managedbuild.toolchain.gnu.cross.base.972861367.1697455814;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1478319181;cdt.managedbuild.tool.gnu.cpp.compiler.input.116799440">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
@@ -72,11 +69,13 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1710145181;cdt.managedbuild.toolchain.gnu.cross.base.1710145181.1827458984;cdt.managedbuild.tool.gnu.cross.cpp.compiler.898077355;cdt.managedbuild.tool.gnu.cpp.compiler.input.1944975500">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.123693403;cdt.managedbuild.toolchain.gnu.cross.base.123693403.522455806;cdt.managedbuild.tool.gnu.cross.c.compiler.1615546408;cdt.managedbuild.tool.gnu.c.compiler.input.213581504">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1710145181;cdt.managedbuild.toolchain.gnu.cross.base.1710145181.1827458984;cdt.managedbuild.tool.gnu.cross.c.compiler.15127621;cdt.managedbuild.tool.gnu.c.compiler.input.347883577">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/common_misc"/>
+		</configuration>
 	</storageModule>
 </cproject>

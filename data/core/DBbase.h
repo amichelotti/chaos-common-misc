@@ -127,8 +127,8 @@ protected:
 		 * Query a dataset(s) in the given range of time and keys
 		 * @param tblname table to address
 		 * @param key to use, if key is empty return a list of keys
-		 * @param startTime start search
-		 * @param endTime end search
+		 * @param startTime start search (0= start time)
+		 * @param endTime end search (-1 = end time)
 		 * @param set output set
 		 * @return the number of sets retrieved, negative if error
 		 * */

@@ -4,7 +4,7 @@
  *  Created on: Feb 24, 2016
  *      Author: michelo
  */
-#undef DEBUG
+#define DEBUG
 #include "DBCassandra.h"
 #include <sstream>
 #include <common/debug/core/debug.h>
@@ -427,6 +427,12 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 	} else if(startTime==0 && endTime ==0){
 		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' order by event_time asc limit 1;";
 	} else {
+		if(endTime==-1){
+			endTime =9999999999999;
+		}
+		if((endTime==0)&&(startTime>0)){
+			endTime=startTime;
+		}
 		query<<"SELECT * from "<<table_name<<" where uuid='"<<ds.getName()<<"' AND event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
 	}
 	DPRINT("query: \"%s\"",query.str().c_str());
@@ -607,10 +613,15 @@ int DBCassandra::queryData(const std::string& tbl,const std::string& key,blobRec
 		} else if(startTime==0 && endTime ==0){
 			query<<"SELECT * from "<<name<<"."<<tbl<<" WHERE uuid = '"<<key<<"'"<<" order by event_time asc limit 1;";
 		} else {
+			if(endTime==-1){
+						endTime =9999999999999;
+			}else if((endTime==0)&&(startTime>0)){
+						endTime=startTime;
+			}
 			if(key.empty()){
 				query<<"SELECT * from "<<name<<"."<<" WHERE uuid = '"<<key<<"'"<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<<" order by event_time desc ;";
 			} else {
-				query<<"SELECT * from "<<name<<"."<<tbl<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<< "AND uuid = '"<<key<<"' order by event_time desc ;";
+				query<<"SELECT * from "<<name<<"."<<tbl<<" where event_time >="<<startTime<<" AND event_time <="<< endTime<< " AND uuid = '"<<key<<"' order by event_time desc ;";
 			}
 		}
 	}

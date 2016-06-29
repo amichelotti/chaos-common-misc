@@ -19,22 +19,23 @@ namespace misc {
 namespace data {
 
 enum dataTypes {
-            TYPE_INT32 = 0,
-            //!Integer 64 bit length
-            TYPE_INT64,
-            //!Double 64 bit length
-            TYPE_DOUBLE,
-            //!C string variable length
-            TYPE_STRING,
-            //!byte array variable length
-            TYPE_BYTEARRAY,
-            //!bool variable length
-            TYPE_BOOLEAN,
-            TYPE_CLUSTER,
+  TYPE_BOOLEAN=0,
+  TYPE_INT32,
+  //!Integer 64 bit length
+  TYPE_INT64,
+  //!Double 64 bit length
+  TYPE_DOUBLE,
+  //!C string variable length
+  TYPE_STRING,
+  //!byte array variable length
+  TYPE_BYTEARRAY,
+  //!bool variable length
+  TYPE_CLUSTER,
             //!modifier to be ored to normal data types
-            TYPE_ACCESS_ARRAY=0x100,
-            TYPE_UNDEFINED
+  TYPE_ACCESS_ARRAY=0x100,
+  TYPE_UNDEFINED
 };
+
 struct DatasetElement{
 		std::string name;
 		void* buffer;
