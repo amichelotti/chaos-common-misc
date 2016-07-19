@@ -123,7 +123,7 @@ CassError DBCassandra::execStatement(CassStatement* statement,bool wait){
 
 		}
 		future = cass_session_execute(session, statement);
-		DPRINT("executing statement, id batch %d-%d, id 0x%x",curr_answer,off,future)
+		DPRINT("executing statement, id batch %d-%d, id 0x%x",curr_answer,off,future);
 
 		future_answer[off]= future;
 
@@ -542,7 +542,7 @@ int DBCassandra::queryData(const DataSet& ds,datasetRecord_t& set ,int64_t start
 		        			}
 		        }
 		        }
-		        set.insert(std::make_pair<int64_t,DataSet>(ts,tmp));
+		        set.insert(std::pair<int64_t,DataSet>(ts,tmp));
 		        //std::stringstream pp;
 		       // pp<<"temp:"<<tmp<<" SET:"<<set[ts];
 		        //DPRINT("%d] %s",nrows,pp.str().c_str());

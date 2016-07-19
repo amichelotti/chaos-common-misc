@@ -1,23 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
 project(common_misc_data_cassandra)
-IF (DEFINED ENV{CHAOS_BUNDLE} )
-  include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
-  SET( CMAKE_CHAOS  $ENV{CHAOS_CMAKE_FLAGS})
-  SET( CROSS_HOST "--host=$ENV{CHAOS_CROSS_HOST}")
-  MESSAGE(STATUS "cross paramters ${CROSS_HOST} CMAKE: ${CMAKE_CHAOS}")
-ELSE()
-  MESSAGE(STATUS "STANDALONE, environment CHAOS_BUNDLE defined")
-  IF (NOT CMAKE_INSTALL_PREFIX) 
-    MESSAGE(fatal "you must add -DCMAKE_INSTALL_PREFIX=<dir>")
-  ELSE()
-    MESSAGE(STATUS "install prefix ${CMAKE_INSTALL_PREFIX}")
-  ENDIF()
-  INCLUDE_DIRECTORIES(. ../..)
-  SET( CMAKE_CHAOS "")
-  SET( CROSS_HOST "")
-  LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
-ENDIF()
-
 
 find_library(CUSTOMLIB libcassandra_static.a PATHS ${CMAKE_INSTALL_PREFIX}/lib DOC "cassandra client library")
 if(NOT CUSTOMLIB)
@@ -116,7 +98,7 @@ if(NOT CUSTOMLIB)
 
 
 else()
-  message(STATUS "using ${out_mod}")
+  message(STATUS "using cpp-driver")
 endif()
 
   INCLUDE_DIRECTORIES(../../../../)

@@ -1,23 +1,19 @@
 cmake_minimum_required(VERSION 2.6)
 project(common_misc_data)
 ADD_DEFINITIONS(-DDEBUG)
-IF (DEFINED ENV{CHAOS_BUNDLE} )
-  include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
-ELSE()
-  MESSAGE(STATUS "STANDALONE, environment CHAOS_BUNDLE defined")
-  IF (NOT CMAKE_INSTALL_PREFIX) 
-    MESSAGE(fatal "you must add -DCMAKE_INSTALL_PREFIX=<dir>")
-  ELSE()
-    MESSAGE(STATUS "install prefix ${CMAKE_INSTALL_PREFIX}")
-  ENDIF()
-  INCLUDE_DIRECTORIES(.  ${CMAKE_INSTALL_PREFIX}/include)
-  LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/build ${CMAKE_INSTALL_PREFIX}/lib)
-ENDIF()
 ADD_DEFINITIONS(-fPIC)
 
 ADD_SUBDIRECTORY(cassandra)
-ADD_SUBDIRECTORY(btf)
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  ADD_SUBDIRECTORY(btf)
+
+  find_library(MEMCACHELIB memcached PATHS ${PROJECT_SOURCE_DIR}/usr/local/lib ${CMAKE_INSTALL_PREFIX}/lib /usr/lib,/usr/local/lib/modbus DOC "memcached library")
+  IF(NOT MEMCACHELIB)
+    GitClone(libmemcached)
+    ConfigureAndBuild(libmemcached "--with-pic --disable-memaslap --disable-sasl --enable-static")
+  ENDIF()
+ENDIF()
 
 file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp)
 
