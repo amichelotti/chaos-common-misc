@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(common_misc_data)
 ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-fPIC)
@@ -6,13 +6,9 @@ ADD_DEFINITIONS(-fPIC)
 ADD_SUBDIRECTORY(cassandra)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+CheckConfigureBuild(memcached libmemcached "--with-pic;--disable-memaslap;--disable-sasl;--enable-static" https://github.com/amichelotti)
   ADD_SUBDIRECTORY(btf)
 
-  find_library(MEMCACHELIB memcached PATHS ${PROJECT_SOURCE_DIR}/usr/local/lib ${CMAKE_INSTALL_PREFIX}/lib /usr/lib,/usr/local/lib/modbus DOC "memcached library")
-  IF(NOT MEMCACHELIB)
-    GitClone(libmemcached)
-    ConfigureAndBuild(libmemcached "--with-pic --disable-memaslap --disable-sasl --enable-static")
-  ENDIF()
 ENDIF()
 
 file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp)
