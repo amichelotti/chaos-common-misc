@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(common_misc_data_cassandra)
 CheckConfigureBuild(uv libuv "--with-pic;--enable-shared=false;--enable-static=true" https://github.com/libuv)
-CheckConfigureBuild(cassandra_static cpp-driver "-DCASS_BUILD_STATIC=ON;-DCASS_USE_STATIC_LIBS=ON;-DCASS_USE_OPENSSL=OFF;-DCASS_INCLUDES=${CMAKE_CURRENT_SOURCE_DIR}/external/libuv/include" https://github.com/datastax)
+CheckConfigureBuild(cassandra_static cpp-driver "-DCASS_DRIVER_CXX_FLAGS=-Wno-error=narrowing -Wno-error=type-limits;--DCASS_BUILD_STATIC=ON;-DCASS_USE_STATIC_LIBS=ON;-DCASS_USE_OPENSSL=OFF;-DCASS_INCLUDES=${CMAKE_CURRENT_SOURCE_DIR}/external/libuv/include" https://github.com/amichelotti)
 
 INCLUDE_DIRECTORIES(../../../../)
 SET(src DBCassandra.cpp )
