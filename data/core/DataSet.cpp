@@ -10,15 +10,17 @@
 #include <sstream>
 #include <boost/date_time.hpp>
 using namespace ::common::misc::data;
-
+using namespace std;
 
 #define A 54059 /* a prime */
 #define B 76963 /* another prime */
 #define C 86969 /* yet another prime */
-std::size_t ::common::misc::data::simpleHash(const char* s,int size)
+
+
+unsigned long ::common::misc::data::simpleHash(const char* s,int size)
 {
   int cnt=0;
-  std::size_t h = 31 /* also prime */;
+  size_t h = 31 /* also prime */;
    while(cnt<size){
      h = (h * A) ^ (s[cnt] * B);
      cnt++;

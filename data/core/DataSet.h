@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <common/debug/core/debug.h>
 #include <boost/shared_ptr.hpp>
-
+#include <stddef.h>
 namespace common  {
 namespace misc {
 namespace data {
@@ -114,7 +114,7 @@ public:
 };
 	std::ostream& operator<<(std::ostream& in,const DataSet&d);
 
-	std::size_t simpleHash(const char* buf,int size);
+	unsigned long simpleHash(const char* buf,int size);
 }
 }
 }
