@@ -18,7 +18,7 @@ namespace scheduler {
 void Scheduler::sched_task(){
 	DPRINT("Scheduler Started");
 	std::vector<SchedBasicElem*>::iterator i;
-	uint64_t begin_time,accum;
+	uint64_t begin_time,accum=0;
 	while(run){
 		begin_time=common::debug::getUsTime();
 		std::sort(v_sched_elem.begin(),v_sched_elem.end(),schedElemCompare);
