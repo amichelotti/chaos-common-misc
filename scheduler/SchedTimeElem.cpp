@@ -14,9 +14,12 @@ namespace scheduler {
 SchedTimeElem::SchedTimeElem(const std::string& uid,int prio):SchedBasicElem(uid,prio) {
 	// TODO Auto-generated constructor stub
 	quantum=0;
-	lastSched=0;
 }
-
+bool SchedTimeElem::hasToSched(uint64_t t){
+	if((t-last_sched)>=quantum)
+		return true;
+	return false;
+}
 SchedTimeElem::~SchedTimeElem() {
 	// TODO Auto-generated destructor stub
 }

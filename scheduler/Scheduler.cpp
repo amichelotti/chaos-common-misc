@@ -21,23 +21,34 @@ void Scheduler::sched_task(){
 	uint64_t begin_time,accum=0;
 	while(run){
 		begin_time=common::debug::getUsTime();
+		boost::mutex::scoped_lock a(m_mutex);
+
 		std::sort(v_sched_elem.begin(),v_sched_elem.end(),schedElemCompare);
 
 		for(i=v_sched_elem.begin();i!=v_sched_elem.end();i++){
-			DPRINT("shedule elem \"%s\" prio:%d",(*i)->getUid().c_str(),(*i)->dynPrio);
-			(*i)->sched();
+			uint64_t st=common::debug::getUsTime();
+			if((*i)->hasToSched(st)){
+			//	DPRINT("schedule elem \"%s\" prio:%d",(*i)->getUid().c_str(),(*i)->dynPrio);
+				(*i)->sched(st);
+				(*i)->last_sched=st;
+			}
+
 		}
-		if(npoints%avg_points){
-			accum+=(common::debug::getUsTime()-begin_time);
+		if(++npoints%avg_points){
+			uint64_t res=(common::debug::getUsTime()-begin_time);
+			accum+=res;
 			schedule_avg= (1.0*accum)/npoints;
-		} else {
+		//	DPRINT("tot sched time %f ms, avg %f ms points %d",1.0*res/1000.0, schedule_avg/1000.0,npoints)
+		} else{
+			DPRINT("sched avg %f ms",schedule_avg/1000.0);
 			accum=0;
+			npoints=0;
 		}
 	}
 
 }
 void Scheduler::add(const std::string& uid,SchedBasicElem* el){
-	boost::mutex::scoped_lock a;
+	boost::mutex::scoped_lock a(m_mutex);
 	if(v_elem_map.find(uid)==v_elem_map.end()){
 		v_sched_elem.push_back(el);
 	}
@@ -45,7 +56,7 @@ void Scheduler::add(const std::string& uid,SchedBasicElem* el){
 }
 
 void Scheduler::remove(const std::string& uid){
-	boost::mutex::scoped_lock a;
+	boost::mutex::scoped_lock a(m_mutex);
 	element_map_t::iterator i=v_elem_map.find(uid);
 	if(i!=v_elem_map.end()){
 		for(std::vector<SchedBasicElem*>::iterator ii=v_sched_elem.begin();ii!=v_sched_elem.begin();ii++){

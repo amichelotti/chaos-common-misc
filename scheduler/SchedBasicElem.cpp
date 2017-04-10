@@ -12,6 +12,7 @@ namespace misc {
 namespace scheduler {
 
 SchedBasicElem::SchedBasicElem(const std::string& _uid,int prio):uid(_uid),basePrio(prio),dynPrio(prio) {
+	last_sched =0;
 	// TODO Auto-generated constructor stub
 }
 
