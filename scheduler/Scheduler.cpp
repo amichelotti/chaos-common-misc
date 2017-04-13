@@ -21,28 +21,37 @@ void Scheduler::sched_task(){
 	uint64_t begin_time,accum=0;
 	while(run){
 		begin_time=common::debug::getUsTime();
-		boost::mutex::scoped_lock a(m_mutex);
-
+		m_mutex.lock();
+		uint64_t waitmin=1000*1000;
 		std::sort(v_sched_elem.begin(),v_sched_elem.end(),schedElemCompare);
 
 		for(i=v_sched_elem.begin();i!=v_sched_elem.end();i++){
 			uint64_t st=common::debug::getUsTime();
 			if((*i)->hasToSched(st)){
 			//	DPRINT("schedule elem \"%s\" prio:%d",(*i)->getUid().c_str(),(*i)->dynPrio);
-				(*i)->sched(st);
+				waitmin=std::min(waitmin,(*i)->sched(st));
 				(*i)->last_sched=st;
 			}
 
 		}
+		m_mutex.unlock();
+
 		if(++npoints%avg_points){
 			uint64_t res=(common::debug::getUsTime()-begin_time);
 			accum+=res;
 			schedule_avg= (1.0*accum)/npoints;
 		//	DPRINT("tot sched time %f ms, avg %f ms points %d",1.0*res/1000.0, schedule_avg/1000.0,npoints)
 		} else{
-			DPRINT("sched avg %f ms",schedule_avg/1000.0);
+			std::string th=boost::lexical_cast<std::string>(m_thread.get_id());
+			DPRINT("[%s] scheduling %d elems average %f ms",th.c_str(),v_sched_elem.size(),schedule_avg/1000.0);
 			accum=0;
 			npoints=0;
+		}
+		if(waitmin){
+
+			//DPRINT("waiting for %lld us",waitmin);
+
+			usleep(waitmin);
 		}
 	}
 
