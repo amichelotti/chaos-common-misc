@@ -27,7 +27,6 @@ namespace common {
         	const std::string uid;
         public:
         	AbstractChannel(const std::string& uid_):uid(uid_){};
-        	AbstractChannel(){}
 
         	const std::string& getUid() const {return uid;}
             /**
