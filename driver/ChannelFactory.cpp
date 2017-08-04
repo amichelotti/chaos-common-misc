@@ -19,7 +19,7 @@ AbstractChannel_psh ChannelFactory::getChannel(std::string serial_dev,int baudra
 	boost::mutex::scoped_lock(chanmutex);
 	std::map<std::string,AbstractChannel_psh>::iterator i=unique_channels.find(serial_dev);
 	if(i!=unique_channels.end()){
-		DPRINT("retrieving SERIAL channel '%s' @%p in use %ld",serial_dev.c_str(),i->second.get(),i->second.use_count());
+		DPRINT("retrieving SERIAL channel '%s' @%p in use count %ld",serial_dev.c_str(),i->second.get(),i->second.use_count());
 		return i->second;
 	}
 	common::serial::PosixSerialComm* ptr=new common::serial::PosixSerialComm(serial_dev,baudrate,parity,bits,stop,hwctrl);
@@ -44,7 +44,7 @@ void ChannelFactory::removeChannel(const std::string& uid){
 
 	std::map<std::string,AbstractChannel_psh>::iterator i=unique_channels.find(uid);
 	if(i!=unique_channels.end()){
-		if(i->second.use_count()==0){
+		if(i->second.use_count()==1){
 			DPRINT("REMOVING CHANNEL '%s' @%p in use %ld",uid.c_str(),i->second.get(),i->second.use_count());
 			unique_channels.erase(i);
 		} else {
@@ -54,9 +54,10 @@ void ChannelFactory::removeChannel(const std::string& uid){
 }
 void ChannelFactory::removeChannel(AbstractChannel_psh& ch){
 	std::string uid=ch->getUid();
-	DPRINT("ATTEMPT TO REMOVE CHANNEL'%s' @%p in use %ld",uid.c_str(),ch.get(),ch.use_count());
-
 	ch.reset();
+
+	DPRINT("ATTEMPT TO REMOVE CHANNEL'%s' @%p in use in %ld places",uid.c_str(),ch.get(),ch.use_count());
+
 	removeChannel(uid);
 }
 
