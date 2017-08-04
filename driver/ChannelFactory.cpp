@@ -54,9 +54,9 @@ void ChannelFactory::removeChannel(const std::string& uid){
 }
 void ChannelFactory::removeChannel(AbstractChannel_psh& ch){
 	std::string uid=ch->getUid();
-	ch.reset();
 
 	DPRINT("ATTEMPT TO REMOVE CHANNEL'%s' @%p in use in %ld places",uid.c_str(),ch.get(),ch.use_count());
+	ch.reset();
 
 	removeChannel(uid);
 }
