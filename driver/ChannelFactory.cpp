@@ -53,6 +53,10 @@ void ChannelFactory::removeChannel(const std::string& uid){
 	}
 }
 void ChannelFactory::removeChannel(AbstractChannel_psh& ch){
+	if(ch.get()==0){
+		DPRINT("CHANNEL REMOVED in use %d",ch.use_count());
+		return;
+	}
 	std::string uid=ch->getUid();
 
 	DPRINT("ATTEMPT TO REMOVE CHANNEL'%s' @%p in use in %ld places",uid.c_str(),ch.get(),ch.use_count());
