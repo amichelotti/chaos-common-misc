@@ -8,6 +8,7 @@
 #include "ChannelFactory.h"
 #include <common/serial/core/PosixSerialComm.h>
 #include <common/debug/core/debug.h>
+
 namespace common {
 namespace misc {
 namespace driver {
@@ -15,65 +16,26 @@ namespace driver {
 std::map<std::string,AbstractChannel_psh> ChannelFactory::unique_channels;
 #ifdef CHAOS
 using namespace chaos::common::data;
-AbstractChannel_psh ChannelFactory::getChannel(const CDataWrapper& json )  throw(chaos::CException) {
-	if(json.hasKey("channel")){
-		CDataWrapper* chanparam=json.getCSDataValue("channel");
-		if(chanparam){
-			if(chanparam->hasKey("dev")){
-				// serial channel
-				std::string dev= chanparam->getStringValue("dev");
-				int baudrate=9800;
-				int stop=0;
-				int parity=0;
-				int bits=8;
-				int hwctrl=0;
-				if(chanparam->hasKey("baudrate")){
-					baudrate=chanparam->getInt32Value("baudrate");
-				} else {
-					throw chaos::CException(-11, "'baudrate' 9600-115200 missing",__PRETTY_FUNCTION__);;
-				}
-				if(chanparam->hasKey("parity")){
-					parity=chanparam->getInt32Value("parity");
-				} else {
-					throw chaos::CException(-11, "'parity' 0-1 missing",__PRETTY_FUNCTION__);
-				}
-				if(chanparam->hasKey("stop")){
-					stop=chanparam->getInt32Value("stop");
-				} else {
-					throw chaos::CException(-11, "'stop' 7-8 bit missing",__PRETTY_FUNCTION__);
-				}
-				if(chanparam->hasKey("hwctrl")){
-					hwctrl=chanparam->getInt32Value("hwctrl");
-				} else {
-					throw chaos::CException(-11, "'hwctrl' bit missing",__PRETTY_FUNCTION__);
-				}
-				return getChannel(dev,baudrate,parity,bits,stop,hwctrl);
-			} else if(chanparam->hasKey("tcp")){
-				std::string dev= chanparam->getStringValue("tcp");
-				int port=80;
-				if(chanparam->hasKey("port")){
-					port=chanparam->getInt32Value("port");
-				} else {
-					throw chaos::CException(-11, "'port' 0-65536 missing",__PRETTY_FUNCTION__);
-				}
-				std::stringstream ss;
-				ss<<dev<<":"<<port;
-				return getChannel(ss.str());
+AbstractChannel_psh ChannelFactory::getChannel(const json_t json )  throw(chaos::CException) {
+	GET_PARAMETER_DO(json,channel,json_t,1){
+		GET_PARAMETER_DO(channel,dev,string,0){
+			//serial channel
+			GET_PARAMETER(channel,baudrate,int32_t,1);
+			GET_PARAMETER(channel,parity,int32_t,1);
+			GET_PARAMETER(channel,stop,int32_t,1);
+			GET_PARAMETER(channel,hwctrl,int32_t,1);
+			GET_PARAMETER(channel,bits,int32_t,1);
+			return getChannel(dev,baudrate,parity,bits,stop,hwctrl);
 
-				// tcp channel
-			} else {
-				throw chaos::CException(-11, "'serial' or 'tcp' keys and parameters must be specified",__PRETTY_FUNCTION__);;
-
-			}
 		}
-
-
-	} else {
-		throw chaos::CException(-11, "channel key is required",__PRETTY_FUNCTION__);;
-
+		GET_PARAMETER_DO(channel,tcp,string,0){
+			GET_PARAMETER_DO(channel,port,int32_t,1){
+			std::stringstream ss;
+			ss<<tcp<<":"<<port;
+			return getChannel(ss.str());
+		}
+		}
 	}
-	throw chaos::CException(-11, "not a correct channel specification",__PRETTY_FUNCTION__);;
-
 }
 #endif
 
@@ -116,7 +78,7 @@ void ChannelFactory::removeChannel(const std::string& uid){
 }
 void ChannelFactory::removeChannel(AbstractChannel_psh& ch){
 	if(ch.get()==0){
-		DPRINT("CHANNEL REMOVED in use %d",ch.use_count());
+		DPRINT("CHANNEL REMOVED in use %ld",ch.use_count());
 		return;
 	}
 	std::string uid=ch->getUid();

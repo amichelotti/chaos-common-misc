@@ -9,9 +9,12 @@
 #define DRIVER_CHANNELFACTORY_H_
 #include "AbstractChannel.h"
 #include <boost/thread.hpp>
+#include <common/misc/driver/ConfigDriverMacro.h>
+
 #ifdef CHAOS
 #include <chaos/common/exception/CException.h>
 #include <chaos/common/data/CDataWrapper.h>
+
 #endif
 #include <map>
 namespace common {
@@ -29,7 +32,7 @@ public:
 	//retrieve a tcp channel
 	static AbstractChannel_psh getChannel(const std::string& ip_port );
 #ifdef CHAOS
-	static AbstractChannel_psh getChannel(const chaos::common::data::CDataWrapper& config)  throw (chaos::CException);
+	static AbstractChannel_psh getChannel(const json_t config)  throw (chaos::CException);
 #endif
 	static void removeChannel(const std::string& uid);
 	static void removeChannel(AbstractChannel_psh& ch);
