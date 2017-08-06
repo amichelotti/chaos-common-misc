@@ -16,8 +16,8 @@ namespace driver {
 std::map<std::string,AbstractChannel_psh> ChannelFactory::unique_channels;
 #ifdef CHAOS
 using namespace chaos::common::data;
-AbstractChannel_psh ChannelFactory::getChannel(const json_t json )  throw(chaos::CException) {
-	GET_PARAMETER_DO(json,channel,json_t,1){
+AbstractChannel_psh ChannelFactory::getChannel(const chaos::common::data::CDataWrapper& json )  throw(chaos::CException) {
+	GET_PARAMETER_DO((&json),channel,json_t,1){
 		GET_PARAMETER_DO(channel,dev,string,0){
 			//serial channel
 			GET_PARAMETER(channel,baudrate,int32_t,1);

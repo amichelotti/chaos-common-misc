@@ -32,7 +32,7 @@ public:
 	//retrieve a tcp channel
 	static AbstractChannel_psh getChannel(const std::string& ip_port );
 #ifdef CHAOS
-	static AbstractChannel_psh getChannel(const json_t config)  throw (chaos::CException);
+	static AbstractChannel_psh getChannel(const chaos::common::data::CDataWrapper& config)  throw (chaos::CException);
 #endif
 	static void removeChannel(const std::string& uid);
 	static void removeChannel(AbstractChannel_psh& ch);
