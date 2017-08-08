@@ -4,7 +4,6 @@
  *  Created on: Feb 23, 2016
  *      Author: michelo
  */
-#define DEBUG
 #include "DBbase.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

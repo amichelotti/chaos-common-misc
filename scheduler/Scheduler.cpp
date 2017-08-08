@@ -43,7 +43,7 @@ void Scheduler::sched_task(){
 		//	DPRINT("tot sched time %f ms, avg %f ms points %d",1.0*res/1000.0, schedule_avg/1000.0,npoints)
 		} else{
 			std::string th=boost::lexical_cast<std::string>(m_thread.get_id());
-			DPRINT("[%s] scheduling %d elems average %f ms",th.c_str(),v_sched_elem.size(),schedule_avg/1000.0);
+			DPRINT("[%s] scheduling %ld elems average %f ms",th.c_str(),v_sched_elem.size(),schedule_avg/1000.0);
 			accum=0;
 			npoints=0;
 		}
