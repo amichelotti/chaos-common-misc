@@ -5,11 +5,11 @@ ADD_DEFINITIONS(-fPIC -std=c++11 )
 SET(CHAOS_CXX_FLAGS "${CHAOS_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-error")
 SET(CHAOS_C_FLAGS "${CHAOS_C_FLAGS} -Wno-shorten-64-to-32 -Wno-error")
 
-# IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+IF(ENABLE_MEMCACHE)
 CheckConfigureBuild(memcached libmemcached "--with-pic;--disable-memaslap;--disable-sasl;--enable-static" https://github.com/amichelotti)
   ADD_SUBDIRECTORY(btf)
 
-# ENDIF()
+ENDIF()
 
 file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp)
 
@@ -26,7 +26,7 @@ INSTALL(FILES ${headers} DESTINATION include/common/misc/data)
 
 ADD_EXECUTABLE(test_db test/test_db.cpp)
 
-TARGET_LINK_LIBRARIES(test_db ${PROJECT_NAME} common_debug ${libs} boost_program_options boost_system boost_thread)
+TARGET_LINK_LIBRARIES(test_db ${PROJECT_NAME} common_debug boost_program_options boost_system boost_thread ${libs} pthread)
 INSTALL_TARGETS(/bin test_db)
 
 # install(DIRECTORY DESTINATION include/driver/daq)  
