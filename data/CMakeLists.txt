@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(common_misc_data)
+option(CASSANDRA_DRIVER "enable support for cassandra" OFF)
+
 IF(CASSANDRA_DRIVER)
+  MESSAGE(STATUS "ENABLING CASSANDRA DRIVER")
   ADD_DEFINITIONS(-DCASSANDRA_DRIVER )
   ADD_SUBDIRECTORY(cassandra)
 ENDIF()
