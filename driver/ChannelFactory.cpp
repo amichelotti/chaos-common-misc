@@ -17,23 +17,23 @@ std::map<std::string,AbstractChannel_psh> ChannelFactory::unique_channels;
 #ifdef CHAOS
 using namespace chaos::common::data;
 AbstractChannel_psh ChannelFactory::getChannel(const chaos::common::data::CDataWrapper& json )  throw(chaos::CException) {
-	GET_PARAMETER_DO((&json),channel,json_t,1){
-		GET_PARAMETER_DO(channel,dev,string,0){
+	GET_PARAMETER_TREE((&json),channel){
+		GET_PARAMETER_DO(channel,serdev,string,0){
 			//serial channel
 			GET_PARAMETER(channel,baudrate,int32_t,1);
 			GET_PARAMETER(channel,parity,int32_t,1);
 			GET_PARAMETER(channel,stop,int32_t,1);
 			GET_PARAMETER(channel,hwctrl,int32_t,1);
 			GET_PARAMETER(channel,bits,int32_t,1);
-			return getChannel(dev,baudrate,parity,bits,stop,hwctrl);
+			return getChannel(serdev,baudrate,parity,bits,stop,hwctrl);
 
 		}
 		GET_PARAMETER_DO(channel,tcp,string,0){
-			GET_PARAMETER_DO(channel,port,int32_t,1){
+			GET_PARAMETER(channel,port,int32_t,1);
 			std::stringstream ss;
 			ss<<tcp<<":"<<port;
 			return getChannel(ss.str());
-		}
+
 		}
 	}
 }
