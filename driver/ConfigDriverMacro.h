@@ -23,18 +23,21 @@ typedef boost::shared_ptr<chaos::common::data::CDataWrapper> json_t;
 
 #define GET_PARAMETER_TREE(_config,_param) \
 		json_t _param;\
-		if(! _config->hasKey(#_param)){\
-			throw chaos::CException(-1,"missing required parameter '" # _param "'",__PRETTY_FUNCTION__);\
+		if( (_config)->hasKey(#_param)){\
+			_param=GET_json_t(_config,# _param);\
+		}\
+		if(! (_config)->hasKey(#_param)){\
+			throw chaos::CException(-1," missing required parameter '" # _param "'",__PRETTY_FUNCTION__);\
 		} else
 
 
 #define GET_PARAMETER(_config,_param,_ctype,_required)\
 	_ctype _param;\
 	if(_config->hasKey(#_param)){\
-		LDBG_<<"Getting parameter '"<< # _param <<"'";\
 		_param=GET_ ## _ctype(_config,# _param);\
+		LDBG_<<"["<< __PRETTY_FUNCTION__ <<"] Getting parameter '"<< # _param <<"'="<<_param;\
 	} else if(_required){\
-		LERR_<<"missing required parameter '" # _param "'";\
+		LERR_<<"["<< __PRETTY_FUNCTION__ <<"] missing required parameter '" # _param "'";\
 		throw chaos::CException(-1,"missing required parameter '" # _param "'",__PRETTY_FUNCTION__);\
 	}
 #define GET_PARAMETER_DEFAULT(_config,_param,_ctype,_default)\
@@ -45,9 +48,9 @@ typedef boost::shared_ptr<chaos::common::data::CDataWrapper> json_t;
 #define GET_PARAMETER_DO(_config,_param,_ctype,_required)\
 		_ctype _param;\
 		if(_config->hasKey(#_param)){\
-			LDBG_<<"Getting parameter '"<< # _param <<"'";\
+			LDBG_<<"["<< __PRETTY_FUNCTION__ <<"] Getting parameter '"<< # _param <<"'";\
 			_param=GET_ ## _ctype(_config,# _param);\
-		} else if(_required){LERR_<<"missing required parameter '" # _param "'";throw chaos::CException(-1,"missing required parameter '" # _param "'",__PRETTY_FUNCTION__);}\
+		} else if(_required){LERR_<< "["<< __PRETTY_FUNCTION__ <<"] missing required parameter '" # _param "'";throw chaos::CException(-1,"missing required parameter '" # _param "'",__PRETTY_FUNCTION__);}\
 		if(_config->hasKey(#_param))
 #endif
 #endif
