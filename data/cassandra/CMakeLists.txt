@@ -12,7 +12,7 @@ ELSE()
 SET(libs pthread)
 ENDIF()
 
-
+SET(DRIVERS_LIB ${DRIVERS_LIB} ${PROJECT_NAME} PARENT_SCOPE)
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} cassandra_static uv common_misc_data common_debug ${libs} boost_log boost_system boost_thread)
 FILE(GLOB headers "*.h")

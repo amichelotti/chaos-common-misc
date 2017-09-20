@@ -6,7 +6,9 @@
  */
 
 #include "DBbaseFactory.h"
+#ifdef CASSANDRA_DRIVER
 #include <common/misc/data/cassandra/DBCassandra.h>
+#endif
 namespace common {
 namespace misc {
 namespace data {
@@ -24,7 +26,13 @@ std::map<std::string,DBbase*> DBbaseFactory::instances;
 			}
 			DBbase*ret=NULL;
 			if(type== "cassandra"){
+#ifdef CASSANDRA_DRIVER
 				ret =new DBCassandra(name);
+#else
+				
+				ERR("cassandra support not enabled -DCASSANDRA_DRIVER=ON");
+				return NULL;
+#endif				
 			} else {
 				ERR("uknown database type:%s",type.c_str());
 				return NULL;
