@@ -16,6 +16,7 @@
 #include <chaos/common/data/CDataWrapper.h>
 
 #endif
+#include <stdexcept>
 #include <map>
 namespace common {
 namespace misc {
@@ -30,10 +31,11 @@ public:
 	// retrieve a Serial Channel
 	static AbstractChannel_psh getChannel(std::string serial_dev,int baudrate,int parity,int bits,int stop,bool hwctrl=false);
 	//retrieve a tcp channel
-	static AbstractChannel_psh getChannel(const std::string& ip_port );
+	static AbstractChannel_psh getChannel(const std::string& ip, int port );
 #ifdef CHAOS
 	static AbstractChannel_psh getChannel(const chaos::common::data::CDataWrapper& config)  throw (chaos::CException);
 #endif
+	static AbstractChannel_psh getChannelFromJson(const std::string& json)  throw (std::logic_error);
 	static void removeChannel(const std::string& uid);
 	static void removeChannel(AbstractChannel_psh& ch);
 
