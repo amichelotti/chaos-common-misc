@@ -4,7 +4,6 @@
  *  Created on: Feb 24, 2016
  *      Author: michelo
  */
-#define DEBUG
 #include "DBCassandra.h"
 #include <sstream>
 #include <common/debug/core/debug.h>
@@ -112,7 +111,7 @@ CassError DBCassandra::execStatement(CassStatement* statement,bool wait){
 		int off=curr_answer%n_threads;
 		if(curr_answer>=n_threads){
 			if(cass_future_ready(future_answer[off])==false){
-				DPRINT("waiting end request %d-%d id 0x%x",curr_answer,off,future_answer[off]);
+				DPRINT("waiting end request %d-%d id %p",curr_answer,off,future_answer[off]);
 				cass_future_wait(future_answer[off]);
 			}
 			rc = cass_future_error_code(future_answer[off]);
@@ -123,7 +122,7 @@ CassError DBCassandra::execStatement(CassStatement* statement,bool wait){
 
 		}
 		future = cass_session_execute(session, statement);
-		DPRINT("executing statement, id batch %d-%d, id 0x%x",curr_answer,off,future);
+		DPRINT("executing statement, id batch %d-%d, id %p",curr_answer,off,future);
 
 		future_answer[off]= future;
 
@@ -285,7 +284,7 @@ int DBCassandra::pushData(const DataSet& dset,uint64_t ts){
 	cnt=2;
 	CassCollection* collection = NULL;
 	for(std::vector<DataSet::DatasetElement_psh>::iterator i=elems.begin();i!=elems.end();i++,cnt++){
-		DPRINT("[%d] binding %s %s[%d] size %d, of type %d @0x%x",cnt,((*i)->type & TYPE_ACCESS_ARRAY)?"array":"scalar",(*i)->name.c_str(),(*i)->molteplicity,(*i)->size,(*i)->type&0xff,(*i)->buffer);
+		DPRINT("[%d] binding %s %s[%d] size %d, of type %d @%p",cnt,((*i)->type & TYPE_ACCESS_ARRAY)?"array":"scalar",(*i)->name.c_str(),(*i)->molteplicity,(*i)->size,(*i)->type&0xff,(*i)->buffer);
 		if((*i)->type & TYPE_ACCESS_ARRAY){
 			void* ptr=(*i)->buffer;
 			collection = cass_collection_new(CASS_COLLECTION_TYPE_LIST, (*i)->molteplicity);

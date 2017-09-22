@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 2.6)
+project(common_misc_driver)
+FILE(GLOB headers "*.h")
+file (GLOB src *.cpp)
+INCLUDE_DIRECTORIES(. ../../..)
+
+ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}  common_serial)
+INSTALL_TARGETS(/lib  ${PROJECT_NAME})
+INSTALL(FILES ${headers} DESTINATION include/common/misc/driver)
