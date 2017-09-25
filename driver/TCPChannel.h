@@ -21,13 +21,20 @@ namespace driver {
 class TCPChannel: public AbstractChannel {
 	std::string ip;
 	int port;
+	size_t byte_read;
+	boost::system::error_code read_result;
 
 	asio::io_service io_service;
 	asio::deadline_timer deadline;
 	asio::ip::tcp::socket socket;
+	boost::asio::socket_base::bytes_readable command;
+	int timeout_arised;
 public:
 	TCPChannel(const std::string& ipport);
 	virtual ~TCPChannel();
+
+	void read_handler(const boost::system::error_code&, std::size_t);
+	void check_deadline( );
 
 
     /**
