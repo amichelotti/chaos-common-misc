@@ -8,6 +8,7 @@
 #include "ChannelFactory.h"
 #include <common/serial/core/PosixSerialComm.h>
 #include <common/debug/core/debug.h>
+#include "TCPChannel.h"
 
 namespace common {
 namespace misc {
@@ -16,6 +17,15 @@ namespace driver {
 std::map<std::string,AbstractChannel_psh> ChannelFactory::unique_channels;
 #ifdef CHAOS
 using namespace chaos::common::data;
+AbstractChannel_psh ChannelFactory::getChannelFromJson(const std::string& json)  throw (std::logic_error){
+	try{
+		chaos::common::data::CDataWrapper data;
+		data.setSerializedJsonData(json.c_str());
+		return ChannelFactory::getChannel(data);
+	} catch (...){
+		throw std::logic_error("bad json");
+	}
+}
 AbstractChannel_psh ChannelFactory::getChannel(const chaos::common::data::CDataWrapper& json )  throw(chaos::CException) {
 	GET_PARAMETER_TREE((&json),channel){
 		GET_PARAMETER_DO(channel,serdev,string,0){
@@ -30,13 +40,18 @@ AbstractChannel_psh ChannelFactory::getChannel(const chaos::common::data::CDataW
 		}
 		GET_PARAMETER_DO(channel,tcp,string,0){
 			GET_PARAMETER(channel,port,int32_t,1);
-			std::stringstream ss;
-			ss<<tcp<<":"<<port;
-			return getChannel(ss.str());
+
+			return getChannel(tcp,port);
 
 		}
 	}
 }
+#else
+AbstractChannel_psh ChannelFactory::getChannelFromJson(const std::string& json)  throw (std::logic_error::logic_error){
+	throw std::logic_error::logic_error("not implemented");
+
+}
+
 #endif
 
 AbstractChannel_psh ChannelFactory::getChannel(std::string serial_dev,int baudrate,int parity,int bits,int stop,bool hwctrl){
@@ -54,13 +69,22 @@ AbstractChannel_psh ChannelFactory::getChannel(std::string serial_dev,int baudra
 	return ret;
 
 }
-AbstractChannel_psh ChannelFactory::getChannel(const std::string& ip_port ){
+AbstractChannel_psh ChannelFactory::getChannel(const std::string& ip, int port ){
 	AbstractChannel_psh p;
+	std::stringstream ss;
+	ss<<ip<<":"<<port;
+
 	boost::mutex::scoped_lock(chanmutex);
-
-	DPRINT("creating TCP channel '%s' @%p",ip_port.c_str(),p.get());
-
-	return p;
+	std::map<std::string,AbstractChannel_psh>::iterator i=unique_channels.find(ss.str());
+	if(i!=unique_channels.end()){
+		DPRINT("retrieving TCP channel '%s' @%p in use count %ld",ss.str().c_str(),i->second.get(),i->second.use_count());
+		return i->second;
+	}
+	DPRINT("creating TCP channel '%s' @%p",ss.str().c_str(),p.get());
+	TCPChannel* ptr=new TCPChannel(ss.str());
+	AbstractChannel_psh ret(ptr);
+	unique_channels[ss.str()]=ret;
+	return ret;
 }
 
 void ChannelFactory::removeChannel(const std::string& uid){
