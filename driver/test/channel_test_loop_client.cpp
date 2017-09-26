@@ -1,4 +1,4 @@
-#include <common/misc/driver/ChannelFactory.h>
+#include <common/misc/driver/SerialChannelFactory.h>
 
 int main(int argc,char** argv){
 	if(argc<2){
@@ -7,7 +7,7 @@ int main(int argc,char** argv){
 	}
 
 	try {
-		common::misc::driver::AbstractChannel_psh channel=common::misc::driver::ChannelFactory::getChannelFromJson(std::string(argv[1]));
+		common::misc::driver::AbstractSerialChannel_psh channel=common::misc::driver::SerialChannelFactory::getChannelFromJson(std::string(argv[1]));
 		channel->init();
 
 		while(1){

@@ -4,7 +4,7 @@ ADD_SUBDIRECTORY(scheduler)
 ADD_SUBDIRECTORY(wavegenerators)
 ADD_SUBDIRECTORY(data)
 ADD_SUBDIRECTORY(beagle)
-ADD_SUBDIRECTORY(driver)
+# ADD_SUBDIRECTORY(driver)
 
 
 
