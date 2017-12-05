@@ -64,19 +64,20 @@ void Scheduler::add(const std::string& uid,SchedBasicElem* el){
 	v_elem_map[uid]=el;
 }
 
-void Scheduler::remove(const std::string& uid){
+int  Scheduler::remove(const std::string& uid){
 	boost::mutex::scoped_lock a(m_mutex);
 	element_map_t::iterator i=v_elem_map.find(uid);
 	if(i!=v_elem_map.end()){
-		for(std::vector<SchedBasicElem*>::iterator ii=v_sched_elem.begin();ii!=v_sched_elem.begin();ii++){
-			if(*ii == v_elem_map[uid]){
+        for(std::vector<SchedBasicElem*>::iterator ii=v_sched_elem.begin();ii!=v_sched_elem.end();ii++){
+            if(*ii == i->second){
 				v_sched_elem.erase(ii);
 				break;
 			}
 		}
 		v_elem_map.erase(i);
+        return 1;
 	}
-
+    return 0;
 }
 void Scheduler::stop(){
 	if(run){

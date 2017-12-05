@@ -30,7 +30,10 @@ class Scheduler {
 	uint32_t npoints;
 public:
 	void add(const std::string& uid,SchedBasicElem*);
-	void remove(const std::string& uid);
+    /**
+      return >0 on success
+    */
+    int remove(const std::string& uid);
 	void stop();
 	void start();
 
