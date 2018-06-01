@@ -9,6 +9,7 @@
 #include <common/debug/core/debug.h>
 #include <boost/chrono.hpp>
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 
 namespace common {
 namespace misc {
