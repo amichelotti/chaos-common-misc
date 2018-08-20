@@ -30,7 +30,6 @@ namespace common {
 			virtual uint64_t getFeatures()=0;
 			virtual int setPulse(int32_t channel, int32_t amplitude, int32_t width, int32_t state)=0;
 			virtual int setChannelVoltage(int32_t channel, double Voltage)=0;
-			virtual int setThrVoltage(int32_t channel, double thrVoltage)=0;
 		};
 	}
 }//common
