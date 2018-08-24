@@ -22,6 +22,12 @@ limitations under the License.
 #define __common_AbstractGibControl_h__
 namespace common {
 	namespace gibcontrol {
+typedef enum {
+			GIBCONTROL_SUPPLIED = 0x1,
+			GIBCONTROL_HVSTATUS = 0x2,
+			GIBCONTROL_PULSING = 0x4,
+			GIBCONTROL_UNKNOWN = 0x8
+		} GibStatus;
 		class AbstractGibControl {
 		  public:
 			AbstractGibControl() {};
@@ -30,6 +36,8 @@ namespace common {
 			virtual uint64_t getFeatures()=0;
 			virtual int setPulse(int32_t channel, int32_t amplitude, int32_t width, int32_t state)=0;
 			virtual int setChannelVoltage(int32_t channel, double Voltage)=0;
+			virtual int PowerOn(int32_t on_state)=0;
+			virtual int getState(int32_t* state, std::string& desc)=0;
 		};
 	}
 }//common
