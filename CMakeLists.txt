@@ -11,8 +11,6 @@ ADD_SUBDIRECTORY(beagle)
 ADD_SUBDIRECTORY(driver)
 ADD_SUBDIRECTORY(GibControl)
 
-
-
 # install(DIRECTORY DESTINATION include/driver/daq)  
 
 
