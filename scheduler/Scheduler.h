@@ -10,7 +10,8 @@
 #include "SchedBasicElem.h"
 #include <boost/thread.hpp>
 #include <vector>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace common {
 namespace misc {
@@ -18,11 +19,14 @@ namespace scheduler {
 #define AVG_POINTS 100
 typedef std::map<std::string,SchedBasicElem*> element_map_t;
 class Scheduler {
+typedef boost::shared_mutex Lock;
+typedef boost::unique_lock< Lock >  WriteLock;
+typedef boost::shared_lock< Lock >  ReadLock;
 
 	element_map_t v_elem_map;
 	std::vector<SchedBasicElem*> v_sched_elem;
 	boost::thread m_thread;
-	boost::mutex m_mutex;
+	Lock m_mutex;
 	int run;
 	void sched_task();
 	double schedule_avg;

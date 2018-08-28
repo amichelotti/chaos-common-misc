@@ -21,9 +21,11 @@ void Scheduler::sched_task(){
 	std::vector<SchedBasicElem*>::iterator i;
 	uint64_t begin_time,accum=0;
 	while(run){
-		begin_time=common::debug::getUsTime();
-		m_mutex.lock();
 		uint64_t waitmin=1000*1000;
+
+		begin_time=common::debug::getUsTime();
+		{
+		ReadLock a(m_mutex);
 		std::sort(v_sched_elem.begin(),v_sched_elem.end(),schedElemCompare);
 
 		for(i=v_sched_elem.begin();i!=v_sched_elem.end();i++){
@@ -35,8 +37,7 @@ void Scheduler::sched_task(){
 			}
 
 		}
-		m_mutex.unlock();
-
+		}
 		if(++npoints%avg_points){
 			uint64_t res=(common::debug::getUsTime()-begin_time);
 			accum+=res;
@@ -58,7 +59,7 @@ void Scheduler::sched_task(){
 
 }
 void Scheduler::add(const std::string& uid,SchedBasicElem* el){
-	boost::mutex::scoped_lock a(m_mutex);
+	WriteLock a(m_mutex);
 	if(v_elem_map.find(uid)==v_elem_map.end()){
 		v_sched_elem.push_back(el);
 	}
@@ -66,7 +67,7 @@ void Scheduler::add(const std::string& uid,SchedBasicElem* el){
 }
 
 int  Scheduler::remove(const std::string& uid){
-	boost::mutex::scoped_lock a(m_mutex);
+	WriteLock a(m_mutex);
 	element_map_t::iterator i=v_elem_map.find(uid);
 	if(i!=v_elem_map.end()){
         for(std::vector<SchedBasicElem*>::iterator ii=v_sched_elem.begin();ii!=v_sched_elem.end();ii++){
