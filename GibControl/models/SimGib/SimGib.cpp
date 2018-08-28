@@ -51,5 +51,8 @@ int SimGib::PowerOn(int32_t on_state) {
 	return 0;
 }
 int SimGib::getState(int32_t* state,std::string& desc) {
+	DPRINT("SimGib driver getState");
+	*state=21;
+	desc="the state is ok";
 	return 0;
 }
