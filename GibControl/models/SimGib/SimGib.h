@@ -33,12 +33,16 @@ namespace common {
 #endif
 				~SimGib();
 				int init(void*);
-				int deinit();
+				int deinit(void);
 				uint64_t getFeatures();
 				int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
 				int setChannelVoltage(int32_t channel,double Voltage);
 				int PowerOn(int32_t on_state);
 				int getState(int32_t* state,std::string& desc);
+				int getVoltages(std::vector<double>& vec );
+				private:
+				int internalState;
+				std::vector<double> adcChannels;
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol

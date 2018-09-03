@@ -24,35 +24,68 @@ limitations under the License.
 using namespace common::gibcontrol;
 using namespace common::gibcontrol::models;
 SimGib::SimGib(const std::string Parameters) {
+	internalState=0;
+	adcChannels.clear();
+	for (int i=0; i < 24; i++)
+	   adcChannels.push_back(i);
+	
 }
 #ifdef CHAOS
 SimGib::SimGib(const chaos::common::data::CDataWrapper &config) { 
+	internalState=0;
+	adcChannels.clear();
+	for (int i=0; i < 24; i++)
+	   adcChannels.push_back(i);
 }
 #endif
 SimGib::~SimGib() {
 }
-SimGib::init(void*) {
+SimGib::init(void* conf) {
 	DPRINT("DRIVER SimGib::init");
+	internalState=12;
 	return 0;
 }
-SimGib::deinit() {
+SimGib::deinit(void) {
 	return 0;
 }
 uint64_t SimGib::getFeatures() {
 	return 0;
 }
 int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
+	DPRINT("Called SetPulse channel %d amlitude %d width %d state %d",channel,amplitude,width,state);
 	return 0;
 }
+	
 int SimGib::setChannelVoltage(int32_t channel,double Voltage) {
+	DPRINT("Called setChannelVoltage channel %d Voltage %f",channel,Voltage);
+	if ((channel > 24-1) || (channel < 0))
+	{
+	   DPRINT(" setChannelVoltage channel %d parameter out of bounds",channel);
+	   return -1;
+	}
+	adcChannels[channel]=Voltage; 
 	return 0;
 }
 int SimGib::PowerOn(int32_t on_state) {
+	if (on_state == 1)
+	   internalState|=1;
+	else
+	   internalState&=0xFFFFFFFE;
 	return 0;
 }
 int SimGib::getState(int32_t* state,std::string& desc) {
-	DPRINT("SimGib driver getState");
-	*state=21;
-	desc="the state is ok";
+	*state=internalState;
+	desc="";
+	if (internalState && ::common::gibcontrol::GibStatus::GIBCONTROL_SUPPLIED)
+		desc+="ON ";
+	else
+		desc+="OFF ";
 	return 0;
 }
+
+int SimGib::getVoltages(std::vector<double>& vec )
+{
+	vec = adcChannels;
+	return 0;
+}
+
