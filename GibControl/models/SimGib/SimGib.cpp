@@ -40,12 +40,12 @@ SimGib::SimGib(const chaos::common::data::CDataWrapper &config) {
 #endif
 SimGib::~SimGib() {
 }
-SimGib::init(void* conf) {
+int SimGib::init(void* conf) {
 	DPRINT("DRIVER SimGib::init");
 	internalState=12;
 	return 0;
 }
-SimGib::deinit(void) {
+int SimGib::deinit(void) {
 	return 0;
 }
 uint64_t SimGib::getFeatures() {
