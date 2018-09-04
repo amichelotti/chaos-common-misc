@@ -76,7 +76,7 @@ int SimGib::PowerOn(int32_t on_state) {
 int SimGib::getState(int32_t* state,std::string& desc) {
 	*state=internalState;
 	desc="";
-	if (internalState && ::common::gibcontrol::GibStatus::GIBCONTROL_SUPPLIED)
+	if (internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)
 		desc+="ON ";
 	else
 		desc+="OFF ";
