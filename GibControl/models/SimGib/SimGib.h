@@ -42,6 +42,7 @@ namespace common {
 				int getState(int32_t* state,std::string& desc);
 				int getVoltages(std::vector<double>& vec );
 				private:
+				std::string DescribeState(int32_t state);
 				int internalState;
 				std::vector<double> adcChannels;
 			};//end class

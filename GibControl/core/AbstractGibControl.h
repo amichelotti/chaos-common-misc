@@ -24,9 +24,8 @@ namespace common {
 	namespace gibcontrol {
 typedef enum {
 			GIBCONTROL_SUPPLIED = 0x1,
-			GIBCONTROL_HVSTATUS = 0x2,
-			GIBCONTROL_PULSING = 0x4,
-			GIBCONTROL_UNKNOWN = 0x8
+			GIBCONTROL_PULSING = 0x2,
+			GIBCONTROL_UNKNOWN = 0x4
 		} GibStatus;
 		class AbstractGibControl {
 		  public:

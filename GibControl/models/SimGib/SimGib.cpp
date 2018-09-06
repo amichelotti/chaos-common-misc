@@ -85,11 +85,8 @@ int SimGib::PowerOn(int32_t on_state) {
 }
 int SimGib::getState(int32_t* state,std::string& desc) {
 	*state=internalState;
-	desc="";
-	if (internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)
-		desc+="ON ";
-	else
-		desc+="OFF ";
+	desc=DescribeState(internalState);
+	
 	return 0;
 }
 
@@ -98,4 +95,15 @@ int SimGib::getVoltages(std::vector<double>& vec )
 	vec = adcChannels;
 	return 0;
 }
+std::string SimGib::DescribeState(int32_t state)
+{
+	std::string desc;
+	if (internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)
+		desc+="ON ";
+	else
+		desc+="OFF ";
+	if (internalState && ::common::gibcontrol::GIBCONTROL_PULSING)
+		desc+="PULSING";
+	return desc;
 
+}
