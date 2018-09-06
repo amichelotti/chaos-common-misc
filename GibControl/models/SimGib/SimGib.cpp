@@ -53,6 +53,16 @@ uint64_t SimGib::getFeatures() {
 }
 int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	DPRINT("Called SetPulse channel %d amlitude %d width %d state %d",channel,amplitude,width,state);
+	if (state > 0)
+	{
+		internalState |= ::common::gibcontrol::GIBCONTROL_PULSING;
+	}
+	else
+	{
+		int mask=0xFFFFFFFF & ( ~ ::common::gibcontrol::GIBCONTROL_PULSING  );
+		internalState &= mask;
+
+	}
 	return 0;
 }
 	

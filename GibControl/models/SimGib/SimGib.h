@@ -19,6 +19,7 @@ limitations under the License.
 #ifndef __GibControl__SimGib__
 #define __GibControl__SimGib__
 #include <common/misc/GibControl/core/AbstractGibControl.h>
+#include <vector>
 #ifdef CHAOS
 #include <chaos/common/data/CDataWrapper.h>
 #endif
