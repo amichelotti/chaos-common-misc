@@ -99,9 +99,9 @@ std::string SimGib::DescribeState(int32_t state)
 {
 	std::string desc;
 	if (internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)
-		desc+="ON ";
+		desc="ON ";
 	else
-		desc+="OFF ";
+		desc="OFF ";
 	if (internalState && ::common::gibcontrol::GIBCONTROL_PULSING)
 		desc+="PULSING";
 	return desc;
