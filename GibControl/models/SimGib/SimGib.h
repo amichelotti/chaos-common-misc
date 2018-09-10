@@ -44,6 +44,7 @@ namespace common {
 				private:
 				std::string DescribeState(int32_t state);
 				int internalState;
+				int32_t pulseStateMask;
 				std::vector<double> adcChannels;
 			};//end class
 		}//end namespace models

@@ -25,6 +25,15 @@ using namespace common::gibcontrol;
 using namespace common::gibcontrol::models;
 SimGib::SimGib(const std::string Parameters) {
 	internalState=0;
+	pulseStateMask=2;
+	DPRINT("obtained string %s",Parameters.c_str());
+	std::string chanStr;
+	int32_t chanNum=0;
+	if (Parameters.size()> 8)
+		chanStr=Parameters.substr(8);
+	chanNum=atoi(chanStr.c_str());
+	DPRINT("chanStr %s",chanStr.c_str());
+	DPRINT("number of channels %d",chanNum);
 	adcChannels.clear();
 	for (int i=0; i < 24; i++)
 	   adcChannels.push_back(i);
@@ -33,6 +42,7 @@ SimGib::SimGib(const std::string Parameters) {
 #ifdef CHAOS
 SimGib::SimGib(const chaos::common::data::CDataWrapper &config) { 
 	internalState=0;
+	pulseStateMask=4;
 	adcChannels.clear();
 	for (int i=0; i < 24; i++)
 	   adcChannels.push_back(i);
@@ -49,20 +59,23 @@ int SimGib::deinit(void) {
 	return 0;
 }
 uint64_t SimGib::getFeatures() {
-	return 0;
+	return 24;
 }
 int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	DPRINT("Called SetPulse channel %d amlitude %d width %d state %d",channel,amplitude,width,state);
 	if (state > 0)
 	{
 		internalState |= ::common::gibcontrol::GIBCONTROL_PULSING;
+		pulseStateMask |= (1 << channel);
 	}
 	else
 	{
 		int mask=0xFFFFFFFF & ( ~ ::common::gibcontrol::GIBCONTROL_PULSING  );
 		internalState &= mask;
-
+		mask = 0xFFFFFFFF & (~ (1 << channel));
+		pulseStateMask &= mask;
 	}
+
 	return 0;
 }
 	
@@ -98,11 +111,11 @@ int SimGib::getVoltages(std::vector<double>& vec )
 std::string SimGib::DescribeState(int32_t state)
 {
 	std::string desc;
-	if (internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)
+	if ((internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)== ::common::gibcontrol::GIBCONTROL_SUPPLIED)
 		desc="ON ";
 	else
 		desc="OFF ";
-	if (internalState && ::common::gibcontrol::GIBCONTROL_PULSING)
+	if ((internalState && ::common::gibcontrol::GIBCONTROL_PULSING) == ::common::gibcontrol::GIBCONTROL_PULSING)
 		desc+="PULSING";
 	return desc;
 
