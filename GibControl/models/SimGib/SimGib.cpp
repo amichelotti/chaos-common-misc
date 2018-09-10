@@ -108,14 +108,25 @@ int SimGib::getVoltages(std::vector<double>& vec )
 	vec = adcChannels;
 	return 0;
 }
+
+int SimGib::getNumOfChannels(int32_t* numOfChannels) {
+	*numOfChannels = this->channels;
+	return 0;
+}
+int SimGib::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
+	return 0;
+}
+
+
 std::string SimGib::DescribeState(int32_t state)
 {
 	std::string desc;
-	if ((internalState && ::common::gibcontrol::GIBCONTROL_SUPPLIED)== ::common::gibcontrol::GIBCONTROL_SUPPLIED)
+	if ((internalState & ::common::gibcontrol::GIBCONTROL_SUPPLIED)== ::common::gibcontrol::GIBCONTROL_SUPPLIED)
 		desc="ON ";
 	else
 		desc="OFF ";
-	if ((internalState && ::common::gibcontrol::GIBCONTROL_PULSING) == ::common::gibcontrol::GIBCONTROL_PULSING)
+	//if ((internalState & ::common::gibcontrol::GIBCONTROL_PULSING) == ::common::gibcontrol::GIBCONTROL_PULSING)
+	if ((internalState & ::common::gibcontrol::GIBCONTROL_PULSING) != 0 )
 		desc+="PULSING";
 	return desc;
 

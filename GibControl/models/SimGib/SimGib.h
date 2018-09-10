@@ -41,11 +41,16 @@ namespace common {
 				int PowerOn(int32_t on_state);
 				int getState(int32_t* state,std::string& desc);
 				int getVoltages(std::vector<double>& vec );
+				int getNumOfChannels(int32_t* numOfChannels);
+				int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels);
 				private:
+				const int channels=24;
 				std::string DescribeState(int32_t state);
 				int internalState;
 				int32_t pulseStateMask;
 				std::vector<double> adcChannels;
+				std::vector<int32_t> pulsingAmplitudes;
+				std::vector<int32_t> pilsingWidth;
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol

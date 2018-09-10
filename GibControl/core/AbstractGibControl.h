@@ -38,6 +38,8 @@ typedef enum {
 			virtual int PowerOn(int32_t on_state)=0;
 			virtual int getState(int32_t* state,std::string& desc)=0;
 			virtual int getVoltages(std::vector<double>& voltages)=0;
+			virtual int getNumOfChannels(int32_t* numOfChannels)=0;
+			virtual int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels)=0;
 		};
 	}
 }//common
