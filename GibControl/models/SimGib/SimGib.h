@@ -50,7 +50,7 @@ namespace common {
 				int32_t pulseStateMask;
 				std::vector<double> adcChannels;
 				std::vector<int32_t> pulsingAmplitudes;
-				std::vector<int32_t> pilsingWidth;
+				std::vector<int32_t> pulsingWidth;
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol

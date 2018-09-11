@@ -25,26 +25,25 @@ using namespace common::gibcontrol;
 using namespace common::gibcontrol::models;
 SimGib::SimGib(const std::string Parameters) {
 	internalState=0;
-	pulseStateMask=2;
+	pulseStateMask=0;
 	DPRINT("obtained string %s",Parameters.c_str());
-	std::string chanStr;
-	int32_t chanNum=0;
-	if (Parameters.size()> 8)
-		chanStr=Parameters.substr(8);
-	chanNum=atoi(chanStr.c_str());
-	DPRINT("chanStr %s",chanStr.c_str());
-	DPRINT("number of channels %d",chanNum);
-	adcChannels.clear();
-	for (int i=0; i < 24; i++)
-	   adcChannels.push_back(i);
 	
+	adcChannels.clear();
+	pulsingAmplitudes.clear();
+	pulsingWidth.clear();
+	for (int i=0; i < this->channels; i++)
+	{
+	   pulsingAmplitudes.push_back(0);
+	   pulsingWidth.push_back(0);
+	   adcChannels.push_back(i);
+	}
 }
 #ifdef CHAOS
 SimGib::SimGib(const chaos::common::data::CDataWrapper &config) { 
 	internalState=0;
-	pulseStateMask=4;
+	pulseStateMask=0;
 	adcChannels.clear();
-	for (int i=0; i < 24; i++)
+	for (int i=0; i < this->channels; i++)
 	   adcChannels.push_back(i);
 }
 #endif
@@ -63,18 +62,30 @@ uint64_t SimGib::getFeatures() {
 }
 int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	DPRINT("Called SetPulse channel %d amlitude %d width %d state %d",channel,amplitude,width,state);
+	if (channel >= this->channels)
+	 return -1;
+
 	if (state > 0)
 	{
-		internalState |= ::common::gibcontrol::GIBCONTROL_PULSING;
-		pulseStateMask |= (1 << channel);
+		RAISEBIT(pulseStateMask,channel);
+		this->pulsingAmplitudes[channel] = amplitude;
+		this->pulsingWidth[channel] = width;
 	}
 	else
 	{
-		int mask=0xFFFFFFFF & ( ~ ::common::gibcontrol::GIBCONTROL_PULSING  );
-		internalState &= mask;
-		mask = 0xFFFFFFFF & (~ (1 << channel));
-		pulseStateMask &= mask;
+		DOWNBIT(pulseStateMask,channel);
+		this->pulsingAmplitudes[channel] = 0;
+		this->pulsingWidth[channel] = 0;
 	}
+	if (pulseStateMask != 0)
+	{
+		UPMASK(internalState,::common::gibcontrol::GIBCONTROL_PULSING);
+	}
+	else
+	{
+		DOWNMASK(internalState,::common::gibcontrol::GIBCONTROL_PULSING);
+	}
+
 
 	return 0;
 }
@@ -114,6 +125,8 @@ int SimGib::getNumOfChannels(int32_t* numOfChannels) {
 	return 0;
 }
 int SimGib::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
+	amplitudes=this->pulsingAmplitudes;
+	widthChannels=this->pulsingWidth;
 	return 0;
 }
 
