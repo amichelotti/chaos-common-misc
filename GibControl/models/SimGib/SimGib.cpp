@@ -43,6 +43,8 @@ SimGib::SimGib(const chaos::common::data::CDataWrapper &config) {
 	internalState=0;
 	pulseStateMask=0;
 	adcChannels.clear();
+	pulsingAmplitudes.clear();
+	pulsingWidth.clear();
 	for (int i=0; i < this->channels; i++)
 	   adcChannels.push_back(i);
 }
@@ -92,12 +94,21 @@ int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t sta
 	
 int SimGib::setChannelVoltage(int32_t channel,double Voltage) {
 	DPRINT("Called setChannelVoltage channel %d Voltage %f",channel,Voltage);
-	if ((channel > 24-1) || (channel < 0))
+	if ((channel > this->channels-1) || (channel < -1))
 	{
 	   DPRINT(" setChannelVoltage channel %d parameter out of bounds",channel);
 	   return -1;
 	}
-	adcChannels[channel]=Voltage; 
+	if (channel > -1)
+		adcChannels[channel]=Voltage; 
+	else if (channel == -1)
+	{
+		for (int i=0; i < this->channels;i++)
+		{
+			adcChannels[i]=Voltage;
+		}
+
+	}
 	return 0;
 }
 int SimGib::PowerOn(int32_t on_state) {
