@@ -35,7 +35,7 @@ SimGib::SimGib(const std::string Parameters) {
 	{
 	   pulsingAmplitudes.push_back(0);
 	   pulsingWidth.push_back(0);
-	   adcChannels.push_back(i);
+	   adcChannels.push_back(0);
 	}
 }
 #ifdef CHAOS
@@ -46,7 +46,12 @@ SimGib::SimGib(const chaos::common::data::CDataWrapper &config) {
 	pulsingAmplitudes.clear();
 	pulsingWidth.clear();
 	for (int i=0; i < this->channels; i++)
-	   adcChannels.push_back(i);
+	{
+	   pulsingAmplitudes.push_back(0);
+	   pulsingWidth.push_back(0);
+	   adcChannels.push_back(0);
+	}
+	   
 }
 #endif
 SimGib::~SimGib() {
@@ -140,7 +145,23 @@ int SimGib::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t
 	widthChannels=this->pulsingWidth;
 	return 0;
 }
-
+int SimGib::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V)
+{
+	std::srand(std::time(nullptr));
+	
+	double noise=(double) ((std::rand() % 10)-5) / 10;
+	*P5V=5+noise;
+	noise= (double) ((std::rand() % 10)-5) / 10;
+	*N5V=-5+noise;
+	noise=(double) ((std::rand() % 10)-5) / 10;
+	if (!(CHECKMASK(internalState,::common::gibcontrol::GIBCONTROL_SUPPLIED)))
+	{
+		*HVSupply=0;
+	}
+	else
+		*HVSupply=43 + noise ;
+	return 0;
+}
 
 std::string SimGib::DescribeState(int32_t state)
 {

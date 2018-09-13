@@ -20,6 +20,8 @@ limitations under the License.
 #define __GibControl__SimGib__
 #include <common/misc/GibControl/core/AbstractGibControl.h>
 #include <vector>
+#include <cstdlib>
+#include <ctime>
 #ifdef CHAOS
 #include <chaos/common/data/CDataWrapper.h>
 #endif
@@ -44,6 +46,7 @@ namespace common {
 				int getNumOfChannels(int32_t* numOfChannels);
 				int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels);
 				private:
+				int getSupplyVoltages(double* HVSupply,double* P5V,double* N5V);
 				const int channels=24;
 				std::string DescribeState(int32_t state);
 				int internalState;

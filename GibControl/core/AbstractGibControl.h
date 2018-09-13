@@ -65,6 +65,7 @@ typedef enum {
 			virtual int getVoltages(std::vector<double>& voltages)=0;
 			virtual int getNumOfChannels(int32_t* numOfChannels)=0;
 			virtual int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels)=0;
+			virtual int getSupplyVoltages(double* HVSupply,double* P5V,double* N5V)=0;
 		};
 	}
 }//common
