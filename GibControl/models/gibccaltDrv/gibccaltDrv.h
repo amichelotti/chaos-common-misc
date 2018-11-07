@@ -1,5 +1,5 @@
 /*
-SimGib.h
+gibccaltDrv.h
 !CHAOS
 Created by CUGenerator
 
@@ -16,46 +16,45 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef __GibControl__SimGib__
-#define __GibControl__SimGib__
+#ifndef __GibControl__gibccaltDrv__
+#define __GibControl__gibccaltDrv__
 #include <common/misc/GibControl/core/AbstractGibControl.h>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
+//added for tcp
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <string.h>
+#include "strings.h"
+#include "unistd.h"
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #ifdef CHAOS
 #include <chaos/common/data/CDataWrapper.h>
 #endif
 namespace common {
 	namespace gibcontrol {
 		namespace models {
-			class SimGib: public AbstractGibControl {
+			class gibccaltDrv: public AbstractGibControl {
 				public:
-				SimGib(const std::string Parameters);
+				gibccaltDrv(const std::string Parameters);
 #ifdef CHAOS
-				SimGib(const chaos::common::data::CDataWrapper& config);
+				gibccaltDrv(const chaos::common::data::CDataWrapper& config);
 #endif
-				~SimGib();
-				//int init(void*);
-				int deinit(void);
-				//uint64_t getFeatures();
+				~gibccaltDrv();
 				int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
 				int setChannelVoltage(int32_t channel,double Voltage);
 				int PowerOn(int32_t on_state);
 				int getState(int32_t* state,std::string& desc);
-				int getVoltages(std::vector<double>& vec );
+				int getVoltages(std::vector<double>& voltages);
 				int getNumOfChannels(int32_t* numOfChannels);
 				int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels);
-				private:
 				int getSupplyVoltages(double* HVSupply,double* P5V,double* N5V);
-				const int channels=24;
-				std::string DescribeState(int32_t state);
-				int internalState;
-				int32_t pulseStateMask;
-				std::vector<double> adcChannels;
-				std::vector<int32_t> pulsingAmplitudes;
-				std::vector<int32_t> pulsingWidth;
+
+				private:
+				std::string gibIP;
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol
 }//end namespace common
-#endif //__GibControl__SimGib__
+#endif //__GibControl__gibccaltDrv__
