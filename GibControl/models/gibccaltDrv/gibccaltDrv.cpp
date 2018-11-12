@@ -28,13 +28,11 @@ limitations under the License.
 using namespace std;
 using namespace common::gibcontrol;
 using namespace common::gibcontrol::models;
-gibccaltDrv::gibccaltDrv(const std::string Parameters) {
-}
+
 
 /**********************************************************************/
 
-int PingGib(const char* IP,int sec)
-{
+int PingGib(const char* IP,int sec) {
 int    i, rc, on = 1;
    int    listen_sd;
    struct protoent *protocol;
@@ -108,8 +106,137 @@ int    i, rc, on = 1;
 }
 /***************************************************************7*/
 
+char* getCommandToRead(int baseAddress,unsigned int offset)
+{
+
+  int i;
+  int somma;
+  char* toRet,val[8];
+  toRet=(char*)malloc(sizeof(char)*12);
+  toRet[0]='r';
+  bzero(val,8);
+  somma=baseAddress+offset;
+  sprintf(val,"%x\0",somma);
+  for (i=0; i< strlen(val);i++)
+  {
+    toRet[i+1]=val[i];
+  }
+  //fprintf(stderr,"val is %s\n",val);
+  toRet[++i]='\r';
+  toRet[++i]='\n';
+  toRet[++i]='\0';
+//  fprintf(stderr,"toRet is %s\n",toRet);
+return toRet;
+}
+
+const char* getCommandToWrite(int baseAddress,int chan,float value)
+{
+  int i,address,valint,zeroToAdd;
+  char* toRet,val[8];
+  char *tmp;
+  std::string  cppString="w";
+  if (value > 75.0f)
+  {
+     printf("Error voltage too high( > 75V))\n");
+     return strdup("");
+  }
+
+  toRet=(char*)malloc(sizeof(char)*32);
+  toRet[0]='w';
+  if (chan < 8) address=baseAddress + chan*4;
+  if ( (chan >7) && (chan < 16) ) address=baseAddress +0x100+((chan-8)*4);
+  if (chan>15)  address= baseAddress + 0x200 + ((chan-16)*4) ;
+  sprintf(val,"%x\0",address);
+  cppString+=val;
+  for (i=0; i< strlen(val);i++)
+  {
+    toRet[i+1]=val[i];
+  }
+  //value deve essere una stringa di 2,4,8 caratteri
+  //valint=(int)( (value -  63.75 )*2604.16);
+  valint=(int)( (value -  64 )*2604.16);
+  sprintf(val,"%x\0",valint);
+  zeroToAdd=8 - strlen(val);
+  
+  for (i=zeroToAdd; i > 0; i-- )
+  {
+     cppString+="0";
+    /*tmp=toRet;
+    toRet=appiccica_stringhe(2,toRet,"0");
+    free(tmp);*/
+  }
+  tmp=toRet;
+  cppString+=val;
+  //toRet=appiccica_stringhe(2,toRet,val);
+  //free(tmp);
+  tmp=toRet;
+  cppString+="\r\n\0";
+  //toRet=appiccica_stringhe(2,toRet,"\r\n\0");
+  //free(tmp);
+  printf ("zeroToAdd is %d \n",zeroToAdd);
+  printf("cppString is %s  adding Value %x\n",cppString.c_str(),valint);
+  return cppString.c_str();
+}
+
+/*******************************************************************/
+int decodeReadString(char* buf)
+{
+  int i,retVal;
+  char tmp[32];
+  for (i=9; i < strlen(buf);i++)
+  {
+    if ( !isalnum(buf[i]) )
+    {
+        tmp[i-9]='\0';
+        break;
+    }
+    tmp[i-9]=buf[i];
+  }
+  i=sscanf(tmp,"%x",&retVal);
+  if (i != 1)
+    retVal=-1;
+  return retVal;
+}
+/********************************************************************/
 
 
+
+
+int OpenSocket(std::string IP)
+{
+   int rc,mysocket;
+   unsigned int dst;
+   struct sockaddr_in server;
+   struct protoent *protocol;
+   protocol=getprotobyname("tcp");
+   mysocket=socket(AF_INET,SOCK_STREAM,protocol->p_proto);
+   inet_pton(AF_INET,IP.c_str(),&dst);
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr=(unsigned int)dst;
+    server.sin_port=htons(23);
+    DPRINT("Connecting  to gib %s\n",IP.c_str());
+    rc=connect(mysocket,(struct sockaddr*)&server,sizeof(server) );
+    if (rc < 0)
+    {
+      printf("Error connecting\n");
+      close(mysocket);
+      shutdown(mysocket,2);
+      return -1;
+    }
+    else
+    {
+      printf("Connected to gib %s\n",IP.c_str());
+      return mysocket;
+    }
+
+
+
+
+}
+
+gibccaltDrv::gibccaltDrv(const std::string Parameters) {
+      this->numOfChannels=24;
+}
 #ifdef CHAOS
 gibccaltDrv::gibccaltDrv(const chaos::common::data::CDataWrapper &config) {
 	
@@ -119,8 +246,12 @@ gibccaltDrv::gibccaltDrv(const chaos::common::data::CDataWrapper &config) {
 		GET_PARAMETER(driver_param, IP, string, 1);
 		gibIP.assign(IP);
 	}
-	
+	this->numOfChannels=24;
 	int isConnected=PingGib(this->gibIP.c_str(),3);
+      if (!isConnected)
+      {
+            DPRINT("WARNING gib seems unreachable");
+      }
 	
 
 }
@@ -141,7 +272,21 @@ int gibccaltDrv::PowerOn(int32_t on_state) {
 	return -1;
 }
 int gibccaltDrv::getState(int32_t* state,std::string& desc) {
-	return 0;
+    
+    int mysocket,rc;
+    mysocket=OpenSocket(this->gibIP);
+    char* comando=getCommandToRead(0xCEA00004,0);
+    char buffer[256];
+    DPRINT("ALEDEBUG comando is ",comando);
+    rc=write(mysocket,comando,11);
+    free(comando);
+    bzero(buffer,256);
+    rc=read(mysocket,buffer,19);
+    int auxVar=decodeReadString(buffer);
+    DPRINT("pulsing state received %d",auxVar);
+    close(mysocket);
+    shutdown(mysocket,2);
+    return 0;
 }
 int gibccaltDrv::getVoltages(std::vector<double>& voltages) {
 	return 0;
@@ -151,6 +296,7 @@ int gibccaltDrv::getNumOfChannels(int32_t* numOfChannels) {
 	return 0;
 }
 int gibccaltDrv::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
+
 	return 0;
 }
 int gibccaltDrv::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V) {

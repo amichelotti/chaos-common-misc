@@ -53,6 +53,7 @@ namespace common {
 
 				private:
 				std::string gibIP;
+				int32_t numOfChannels;
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol
