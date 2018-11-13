@@ -54,6 +54,29 @@ namespace common {
 				private:
 				std::string gibIP;
 				int32_t numOfChannels;
+				unsigned int lastUpdate;
+				unsigned int pulsingstate;
+				unsigned int internalState;
+				double  SupplyHV;
+				double Neg5,Pos5;
+				double Temperature[2];
+				std::vector<double> ChannelVoltages;
+				int ReadGib();
+
+				const unsigned int DACMapAddress[24]={ 0x83D00000,0x83D00004,
+                                        0x83D00100,0x83D00104,
+                                        0x83D00200,0x83D00204,
+                                        0x83D00008,0x83D0000C,
+                                        0x83D00108,0x83D0010C,
+                                        0x83D00208,0x83D0020C,
+                                        0x83D00010,0x83D00014,
+                                        0x83D00110,0x83D00114,
+                                        0x83D00210,0x83D00214,
+                                        0x83D00018,0x83D0001C,
+                                        0x83D00118,0x83D0011C,
+                                        0x83D00218,0x83D0021C};
+				const int VettoreMapSipm[24]={0,1,6,7,12,13,18,19,2,3,8,9,14,15,20,21,4,5,10,11,16,17,22,23};
+
 			};//end class
 		}//end namespace models
 	}//end namespace gibcontrol
