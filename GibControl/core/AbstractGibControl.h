@@ -45,7 +45,11 @@ bitmask |= (1 << bitToRaise)
 
 
 
+typedef enum {
+	GIB_UNREACHABLE = -2,
+	GENERIC_ERROR = -1
 
+} DriverErrorCodes;
 
 typedef enum {
 			GIBCONTROL_SUPPLIED = 0x1,

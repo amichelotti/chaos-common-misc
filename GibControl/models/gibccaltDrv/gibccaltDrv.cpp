@@ -83,7 +83,7 @@ int    i, rc, on = 1;
    addr.sin_family      = AF_INET;
    addr.sin_addr.s_addr = inet_addr(IP);
    addr.sin_port        = htons(23);
-   DPRINT("Pinging  to gib %s\n",IP);
+   //DPRINT("Pinging  to gib %s\n",IP);
      connect(listen_sd, (struct sockaddr *) &addr, sizeof(addr));
 
      FD_ZERO(&fds);
@@ -97,7 +97,7 @@ int    i, rc, on = 1;
         return 1;
      } else
      {
-        DPRINT(" ALEDEBUG  connect error\n");
+        DPRINT(" PingGib Connect error\n");
         close(listen_sd);
         shutdown(listen_sd,2);
         return -1;
@@ -215,7 +215,15 @@ int decodeReadString(char* buf)
     retVal=-99;
   return retVal;
 }
-/********************************************************************/
+
+int convertPulseAmplitude(int Ampl) {
+   return (int) ((Ampl/304)*1000000);
+}
+
+int convertPulseWidth(int Width) {
+   return (int) (Width*1000/5.3);
+}
+
 
 
 unsigned int getDACCode(double Val)
@@ -253,7 +261,7 @@ int OpenSocket(std::string IP)
       printf("Error connecting\n");
       close(mysocket);
       shutdown(mysocket,2);
-      return -1;
+      return GIB_UNREACHABLE;
     }
     else
     {
@@ -273,11 +281,16 @@ int gibccaltDrv::ReadGib(){
    time_t now=time(NULL);
    if ((now-this->lastUpdate) <  2)
       return 2;
+    if (PingGib(this->gibIP.c_str(),1)!= 1)
+    {
+      return GIB_UNREACHABLE;
+
+    }
     this->lastUpdate=now;
     mysocket=OpenSocket(this->gibIP);
      if (mysocket < 0)
      {
-            return mysocket;
+            return GIB_UNREACHABLE;
       }
       else
      {
@@ -296,6 +309,7 @@ int gibccaltDrv::ReadGib(){
         rc=read(mysocket,buffer,19);
         auxVar=decodeReadString(buffer);
         this->internalState=((auxVar & 0x100) != 0);
+        
         //Terzo ADC
         for (int i=0; i < 7; i++)
               {
@@ -335,44 +349,140 @@ int gibccaltDrv::ReadGib(){
         rc=read(mysocket,buffer,19);
         auxVar=decodeReadString(buffer);
         this->ChannelVoltages[VettoreMapSipm[i]]=getADCValue(auxVar);
-        //ReorderVoltageChannels();
        }
+        SetInternalState();
         close(mysocket);
         shutdown(mysocket,2);
-       }
+      }
+      return 0;
 
  }
 
+void gibccaltDrv::SetInternalState() {
+  if ((this->pulsingstate==0) || (this->pulsingstate==0xFFFFF))
+  {
+    DOWNMASK(this->internalState,GIBCONTROL_PULSING);
+  }
+  else
+  {
+    UPMASK(this->internalState,GIBCONTROL_PULSING);
+  }
+
+}
+
+std::string gibccaltDrv::DecodeStatus() {
+  std::string retString="";
+  if (CHECKMASK(this->internalState,GIBCONTROL_SUPPLIED))
+  {
+    retString+="Power On ";
+  }
+  else
+  {
+    retString+="Power Off ";
+  }
+  if (CHECKMASK(this->internalState,GIBCONTROL_PULSING))
+  {
+    retString+=" Pulsing";
+  }
+  return retString;
+}
+
+void gibccaltDrv::SetUp() {
+     this->numOfChannels=24;
+      this->ChannelVoltages.resize(this->numOfChannels);
+      this->ChannelAmplitudes.resize(this->numOfChannels);
+      this->ChannelWidths.resize(this->numOfChannels);
+      this->lastUpdate=0;
+}
 
 gibccaltDrv::gibccaltDrv(const std::string Parameters) {
-      this->numOfChannels=24;
-      this->ChannelVoltages.resize(this->numOfChannels);
-      this->lastUpdate=0;
+     this->SetUp();
 }
 #ifdef CHAOS
 gibccaltDrv::gibccaltDrv(const chaos::common::data::CDataWrapper &config) {
-	
+
 	DPRINT("received init parameter %s ",config.getJSONString().c_str());
 	GET_PARAMETER_TREE((&config), driver_param)
 	{
 		GET_PARAMETER(driver_param, IP, string, 1);
 		gibIP.assign(IP);
 	}
-	this->numOfChannels=24;
-  this->ChannelVoltages.resize(this->numOfChannels);
-  this->lastUpdate=0;
-	int isConnected=PingGib(this->gibIP.c_str(),3);
+	this->SetUp();
+	/*int isConnected=PingGib(this->gibIP.c_str(),3);
       if (!isConnected)
       {
             DPRINT("WARNING gib seems unreachable");
-      }
-	
-
+      }*/
 }
 #endif
 gibccaltDrv::~gibccaltDrv() {
 }
 int gibccaltDrv::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
+    int rc, mysocket;
+    std::string cmd;
+    char buffer[256];
+    if (channel < 0)
+      return -1;
+    mysocket=OpenSocket(this->gibIP);
+    if (mysocket < 0)
+    {
+      return GIB_UNREACHABLE;
+    }
+    else
+    {
+      int value,auxVar;
+
+      value=(state==0) ? 0 : (1 << channel);
+      value=0x000FFFFF & ~value;
+      if (state==0)
+      {
+         amplitude=0;
+         width=0;
+      }
+      rc=read(mysocket,buffer,256); //svuotamento buffer
+      bzero(buffer,256);
+      /********************************************/
+      //Setting width and ampl
+      cmd=getWriteCommand(0x83D00300,0,convertPulseAmplitude(amplitude));
+      rc=write(mysocket,cmd.c_str(),cmd.length());
+      bzero(buffer,256);
+      rc=read(mysocket,buffer,cmd.length());
+      cmd=getWriteCommand(0x83D00300,4,convertPulseWidth(width));
+      rc=write(mysocket,cmd.c_str(),cmd.length());
+      bzero(buffer,256);
+      rc=read(mysocket,buffer,cmd.length());
+
+      /*************Setting channel*******************************/
+      cmd=getWriteCommand(0xCEA00004,0,value);
+      rc=write(mysocket,cmd.c_str(),cmd.length());
+      bzero(buffer,256);
+      rc=read(mysocket,buffer,cmd.length());
+      DPRINT("Pulse rc = %d\n,buffer = %s",rc,buffer);
+
+
+      cmd=getCommandToRead(0xCEA00004,0);
+      rc=write(mysocket,cmd.c_str(),11);
+      bzero(buffer,256);
+      rc=read(mysocket,buffer,19);
+      auxVar=decodeReadString(buffer);
+      if (auxVar == value)
+      {
+         std::fill(this->ChannelAmplitudes.begin(), this->ChannelAmplitudes.end(), 0);
+         std::fill(this->ChannelWidths.begin(), this->ChannelWidths.end(), 0);
+         this->ChannelAmplitudes[channel]=amplitude;
+         this->ChannelWidths[channel]=width;
+         DPRINT("Successfully set Pulse!");
+      }
+      else
+      {
+          DPRINT("Error occurred setting Pulse %d read %x input %x\n",rc,auxVar,value);
+          close(mysocket);
+          shutdown(mysocket,2);
+          return -1;
+      }
+      close(mysocket);
+      shutdown(mysocket,2);
+    }
 	return 0;
 }
 int gibccaltDrv::setChannelVoltage(int32_t channel,double Voltage) {
@@ -381,7 +491,8 @@ int gibccaltDrv::setChannelVoltage(int32_t channel,double Voltage) {
   mysocket=OpenSocket(this->gibIP);
   if (mysocket < 0)
   {
-    return mysocket;
+
+    return GIB_UNREACHABLE;
   }
   else
   {
@@ -393,11 +504,9 @@ int gibccaltDrv::setChannelVoltage(int32_t channel,double Voltage) {
     if (channel != -1)
     {
        address=DACMapAddress[channel];
-       if ((channel==22) || (channel==23))
-         printf("Setting at Address %x\n",address);
        cmd=getWriteCommand(address,0,ival);
        rc+=write(mysocket,cmd.c_str(),cmd.length());
-       DPRINT("Launched %s ival %x  at address %x len %d len received %d\n",cmd.c_str(),ival,address,cmd.length(),rc);
+       //DPRINT("Launched %s ival %x  at address %x len %d len received %d\n",cmd.c_str(),ival,address,cmd.length(),rc);
        bzero(buffer,256);
        rc+=read(mysocket,buffer,cmd.length());
     }
@@ -494,29 +603,48 @@ int gibccaltDrv::PowerOn(int32_t on_state) {
 }
 int gibccaltDrv::getState(int32_t* state,std::string& desc) {
     
-    ReadGib();
-    *state=internalState;
-    return 0;
+    int ret=ReadGib();
+    if (ret >=0)
+    {
+      *state=internalState;
+      desc=DecodeStatus();
+      return 0;
+    }
+    return ret;
 }
 int gibccaltDrv::getVoltages(std::vector<double>& voltages) {
-     ReadGib();
-     voltages=this->ChannelVoltages;
-	return 0;
+    int ret=ReadGib();
+    
+    if (ret >=0)
+    {
+      voltages=this->ChannelVoltages;
+      return 0;
+    }
+	return ret;
 }
 int gibccaltDrv::getNumOfChannels(int32_t* numOfChannels) {
 	*numOfChannels=24;
 	return 0;
 }
 int gibccaltDrv::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
-    //ReadGib();
-
-	return 0;
+    int ret=ReadGib();
+    if (ret >=0)
+    {
+      amplitudes=this->ChannelAmplitudes;
+      widthChannels=this->ChannelWidths;
+      return 0;
+    }
+	  return ret;
 }
 int gibccaltDrv::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V) {
-   ReadGib();
-   *HVSupply=this->SupplyHV;
-   *P5V=this->Pos5;
-   *N5V= - this->Neg5;
-
-	return 0;
+  int ret= ReadGib();
+  
+  if (ret >=0)
+  {
+    *HVSupply=this->SupplyHV;
+    *P5V=this->Pos5;
+    *N5V= - this->Neg5;
+    return 0;
+  }
+	return ret;
 }

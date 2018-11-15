@@ -61,7 +61,12 @@ namespace common {
 				double Neg5,Pos5;
 				double Temperature[2];
 				std::vector<double> ChannelVoltages;
+				std::vector<int32_t> ChannelAmplitudes;
+				std::vector<int32_t> ChannelWidths;
+				void SetUp();
 				int ReadGib();
+				void SetInternalState();
+				std::string DecodeStatus();
 
 				const unsigned int DACMapAddress[24]={ 0x83D00000,0x83D00004,
                                         0x83D00100,0x83D00104,
