@@ -359,7 +359,7 @@ int gibccaltDrv::ReadGib(){
  }
 
 void gibccaltDrv::SetInternalState() {
-  if ((this->pulsingstate==0) || (this->pulsingstate==0xFFFFF))
+  if ((this->pulsingstate==0) || (this->pulsingstate==0xFFFFF) || (this->pulsingstate==0xffffffff))
   {
     DOWNMASK(this->internalState,GIBCONTROL_PULSING);
   }
