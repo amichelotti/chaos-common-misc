@@ -253,21 +253,19 @@ int OpenSocket(std::string IP)
     server.sin_family = AF_INET;
     server.sin_addr.s_addr=(unsigned int)dst;
     server.sin_port=htons(23);
-    DPRINT("Connecting  to gib %s\n",IP.c_str());
+    //DPRINT("Connecting  to gib %s\n",IP.c_str());
     rc=connect(mysocket,(struct sockaddr*)&server,sizeof(server) );
     
     if (rc < 0)
     {
-      printf("Error connecting\n");
+      DPRINT("Error connecting to gib %s\n",IP.c_str());
       close(mysocket);
       shutdown(mysocket,2);
       return GIB_UNREACHABLE;
     }
     else
     {
-      printf("Connected to gib %s\n",IP.c_str());
-      char buffer[256];
-      //rc=read(mysocket,buffer,256); //svuotamento buffer
+      //DPRINT("Connected to gib %s\n",IP.c_str());
       return mysocket;
     }
 
