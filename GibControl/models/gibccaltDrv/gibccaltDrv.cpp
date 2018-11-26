@@ -299,7 +299,7 @@ int gibccaltDrv::ReadGib(){
         bzero(buffer,256);
         rc=read(mysocket,buffer,19);
         int auxVar=decodeReadString(buffer);
-        DPRINT("buffer received %s pulsing state received %x",buffer,auxVar);
+        //DPRINT("buffer received %s pulsing state received %x",buffer,auxVar);
         this->pulsingstate=auxVar;
         comando=getCommandToRead(0xCEA00000,0);
         rc=write(mysocket,comando.c_str(),comando.length());
