@@ -64,7 +64,7 @@ namespace common {
 				std::vector<int32_t> ChannelAmplitudes;
 				std::vector<int32_t> ChannelWidths;
 				void SetUp();
-				int ReadGib();
+				int ReadGib(int numOfTryes=0);
 				void SetInternalState();
 				std::string DecodeStatus();
 

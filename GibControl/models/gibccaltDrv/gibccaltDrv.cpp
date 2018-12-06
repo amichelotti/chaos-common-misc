@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <common/debug/core/debug.h>
+#include <signal.h>
 //#define CHAOS
 #ifdef CHAOS
 #include <common/misc/driver/ConfigDriverMacro.h>
@@ -43,6 +44,7 @@ int    i, rc, on = 1;
    fd_set        fds;
    tv.tv_sec = sec;
    tv.tv_usec = 500000;
+   
    /*************************************************************/
    /* Create an AF_INET stream socket to receive incoming       */
    /* connections on                                            */
@@ -274,86 +276,105 @@ int OpenSocket(std::string IP)
 
 }
 
-int gibccaltDrv::ReadGib(){
+int gibccaltDrv::ReadGib( int numOfTryes){
    int mysocket,rc;
    time_t now=time(NULL);
    if ((now-this->lastUpdate) <  2)
       return 2;
+   signal(SIGPIPE,SIG_IGN);
     if (PingGib(this->gibIP.c_str(),1)!= 1)
     {
       return GIB_UNREACHABLE;
 
     }
     this->lastUpdate=now;
-    mysocket=OpenSocket(this->gibIP);
-     if (mysocket < 0)
-     {
-            return GIB_UNREACHABLE;
-      }
-      else
-     {
-        char buffer[256];
-        rc=read(mysocket,buffer,256);//SVUOTAMENTO BUFFER
-        std::string comando=getCommandToRead(0xCEA00004,0);
-        rc=write(mysocket,comando.c_str(),11);
-        bzero(buffer,256);
-        rc=read(mysocket,buffer,19);
-        int auxVar=decodeReadString(buffer);
-        //DPRINT("buffer received %s pulsing state received %x",buffer,auxVar);
-        this->pulsingstate=auxVar;
-        comando=getCommandToRead(0xCEA00000,0);
-        rc=write(mysocket,comando.c_str(),comando.length());
-        bzero(buffer,256);
-        rc=read(mysocket,buffer,19);
-        auxVar=decodeReadString(buffer);
-        this->internalState=((auxVar & 0x100) != 0);
-        
-        //Terzo ADC
-        for (int i=0; i < 7; i++)
-              {
-                if ( (i==2) || (i == 3) )
-                      continue;
-                comando=getCommandToRead(0x83D00700,i*4);
-                rc=write(mysocket,comando.c_str(),11);
-                bzero(buffer,256);
-                rc=read(mysocket,buffer,19);
-                //DPRINT("sent %s Received buffer %s rc is %d",comando.c_str() ,buffer, rc);
-                if (i<2)
-                {
-                      this->Temperature[i]=decodeReadString(buffer);
-                      //DPRINT("Temperature is %f",this->Temperature[i]);
-                }
-                      
-                if (i == 4)
-                      this->SupplyHV=ConvertHV(decodeReadString(buffer));
-                if ((i == 5) || (i==6) )
-                {
-                  if (i==5)
-                    this->Pos5=ConvertLV(decodeReadString(buffer));
-                    else
-                    this->Neg5=ConvertLV(decodeReadString(buffer));
-                }
-              }
-       for (int i=0;i < this->numOfChannels;++i)
-       {
-        if (i < 8)
-          comando=getCommandToRead(0x83D00400,i*4);
-        if ((i>=8) && (i < 16))
-          comando=getCommandToRead(0x83D00500,(i-8)*4);
-        if (i>=16)
-          comando=getCommandToRead(0x83D00600,(i-16)*4);
-        rc=write(mysocket,comando.c_str(),11);
-        bzero(buffer,256);
-        rc=read(mysocket,buffer,19);
-        auxVar=decodeReadString(buffer);
-        this->ChannelVoltages[VettoreMapSipm[i]]=getADCValue(auxVar);
-       }
-        SetInternalState();
-        close(mysocket);
-        shutdown(mysocket,2);
-      }
-      return 0;
+    
 
+    try
+    {
+          mysocket=OpenSocket(this->gibIP);
+          if (mysocket < 0)
+          {
+                  return GIB_UNREACHABLE;
+            }
+            else
+          {
+              char buffer[256];
+              rc=read(mysocket,buffer,256);//SVUOTAMENTO BUFFER
+              std::string comando=getCommandToRead(0xCEA00004,0);
+              rc=write(mysocket,comando.c_str(),11);
+              bzero(buffer,256);
+              rc=read(mysocket,buffer,19);
+              int auxVar=decodeReadString(buffer);
+              //DPRINT("buffer received %s pulsing state received %x",buffer,auxVar);
+              this->pulsingstate=auxVar;
+              comando=getCommandToRead(0xCEA00000,0);
+              rc=write(mysocket,comando.c_str(),comando.length());
+              bzero(buffer,256);
+              rc=read(mysocket,buffer,19);
+              auxVar=decodeReadString(buffer);
+              this->internalState=((auxVar & 0x100) != 0);
+              
+              //Terzo ADC
+              for (int i=0; i < 7; i++)
+                    {
+                      if ( (i==2) || (i == 3) )
+                            continue;
+                      comando=getCommandToRead(0x83D00700,i*4);
+                      rc=write(mysocket,comando.c_str(),11);
+                      bzero(buffer,256);
+                      rc=read(mysocket,buffer,19);
+                      //DPRINT("sent %s Received buffer %s rc is %d",comando.c_str() ,buffer, rc);
+                      if (i<2)
+                      {
+                            this->Temperature[i]=decodeReadString(buffer);
+                            //DPRINT("Temperature is %f",this->Temperature[i]);
+                      }
+                            
+                      if (i == 4)
+                            this->SupplyHV=ConvertHV(decodeReadString(buffer));
+                      if ((i == 5) || (i==6) )
+                      {
+                        if (i==5)
+                          this->Pos5=ConvertLV(decodeReadString(buffer));
+                          else
+                          this->Neg5=ConvertLV(decodeReadString(buffer));
+                      }
+                    }
+            for (int i=0;i < this->numOfChannels;++i)
+            {
+              if (i < 8)
+                comando=getCommandToRead(0x83D00400,i*4);
+              if ((i>=8) && (i < 16))
+                comando=getCommandToRead(0x83D00500,(i-8)*4);
+              if (i>=16)
+                comando=getCommandToRead(0x83D00600,(i-16)*4);
+              rc=write(mysocket,comando.c_str(),11);
+              bzero(buffer,256);
+              rc=read(mysocket,buffer,19);
+              auxVar=decodeReadString(buffer);
+              this->ChannelVoltages[VettoreMapSipm[i]]=getADCValue(auxVar);
+            }
+              SetInternalState();
+              close(mysocket);
+              shutdown(mysocket,2);
+            }
+            signal(SIGPIPE,SIG_DFL);
+            return 0;
+    }
+    catch (...)
+    {
+      if (numOfTryes == 0)
+      {
+          return ReadGib(1);
+      }
+      else 
+      {
+        signal(SIGPIPE,SIG_DFL);
+        return -1;
+      }
+
+    }
  }
 
 void gibccaltDrv::SetInternalState() {
