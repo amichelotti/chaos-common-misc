@@ -96,7 +96,7 @@ int HetPicSim::getNumberOfChannel(int32_t& chanNum) {
 	return 0;
 }
 int HetPicSim::getStatus(int32_t& status) {
-	DPRINT ("internal Status=%d",this->internalStatus);
+	//DPRINT ("internal Status=%d",this->internalStatus);
 	UPMASK(this->internalStatus,::common::hetpic::HETPIC_OK);
 	status=this->internalStatus;
 	return 0;
