@@ -22,6 +22,10 @@ limitations under the License.
 #define __common_AbstractHETPic_h__
 namespace common {
 	namespace hetpic {
+		typedef enum {
+			HETPIC_OK = 0x1,
+			HETPIC_NOT_RESPONSIVE = 0x2			
+		} StatusPIC;
 		class AbstractHETPic {
 		  public:
 			AbstractHETPic() {};
@@ -29,9 +33,10 @@ namespace common {
 			virtual int SetHighThreshold(int32_t channel,int32_t millivolts)=0;
 			virtual int SetLowThreshold(int32_t channel,int32_t millivolts)=0;
 			virtual int setPulse(int32_t value)=0;
-			virtual int getLowThresholds(int32_t& lowthresholds)=0;
-			virtual int getHighThresholds(int32_t& highthresholds)=0;
-			virtual int getTemperatures(double& temperature_0,double& temperature_1)=0;
+			virtual int getNumberOfChannel(int32_t& chanNum)=0;
+			virtual int getStatus(int32_t& status)=0;
+			virtual int getHighThresholds(std::vector<int32_t>& highThresholds)=0;
+			virtual int getLowThresholds(std::vector<int32_t>& lowThresholds)=0;
 		};
 	}
 }//common

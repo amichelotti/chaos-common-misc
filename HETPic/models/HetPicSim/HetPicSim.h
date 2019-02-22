@@ -19,6 +19,7 @@ limitations under the License.
 #ifndef __HETPic__HetPicSim__
 #define __HETPic__HetPicSim__
 #include <common/misc/HETPic/core/AbstractHETPic.h>
+#include <vector>
 #ifdef CHAOS
 #include <chaos/common/data/CDataWrapper.h>
 #endif
@@ -35,9 +36,14 @@ namespace common {
 				int SetHighThreshold(int32_t channel,int32_t millivolts);
 				int SetLowThreshold(int32_t channel,int32_t millivolts);
 				int setPulse(int32_t value);
-				int getLowThresholds(int32_t& lowthresholds);
-				int getHighThresholds(int32_t& highthresholds);
-				int getTemperatures(double& temperature_0,double& temperature_1);
+				int getNumberOfChannel(int32_t& chanNum);
+				int getStatus(int32_t& status);
+				int getHighThresholds(std::vector<int32_t>& highThresholds);
+				int getLowThresholds(std::vector<int32_t>& lowThresholds);
+				private:
+				uint32_t numberOfChannels;
+				std::vector<int32_t> lowTHR;
+				std::vector<int32_t> highTHR;
 			};//end class
 		}//end namespace models
 	}//end namespace hetpic

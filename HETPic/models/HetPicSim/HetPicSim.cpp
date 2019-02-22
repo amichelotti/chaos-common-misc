@@ -24,28 +24,91 @@ limitations under the License.
 using namespace common::hetpic;
 using namespace common::hetpic::models;
 HetPicSim::HetPicSim(const std::string Parameters) {
+	this->numberOfChannels=32;
+	for (int i=0; i < this->numberOfChannels; i++)
+	{
+		this->lowTHR.push_back(2);
+		this->highTHR.push_back(3);
+	}
 }
 #ifdef CHAOS
 HetPicSim::HetPicSim(const chaos::common::data::CDataWrapper &config) { 
+	this->numberOfChannels=32;
+	for (int i=0; i < this->numberOfChannels; i++)
+	{
+		this->lowTHR.push_back(1);
+		this->highTHR.push_back(2);
+	}
 }
 #endif
 HetPicSim::~HetPicSim() {
 }
 int HetPicSim::SetHighThreshold(int32_t channel,int32_t millivolts) {
-	return 0;
+	if ((channel>=0) && (channel < this->numberOfChannels))
+	{
+		this->highTHR[channel]=millivolts;
+		return 0;
+	}
+	else if (channel==-1)
+	{
+		for (int i=0; i < this->numberOfChannels; i++)
+		{
+			this->highTHR[i]=millivolts;
+		}
+		return 0;
+	}
+	else
+	{
+
+		return -1;
+	}
+	
 }
 int HetPicSim::SetLowThreshold(int32_t channel,int32_t millivolts) {
+	if ((channel>=0) && (channel < this->numberOfChannels))
+	{
+		this->lowTHR[channel]=millivolts;
+		return 0;
+	}
+	else if (channel==-1)
+	{
+		for (int i=0; i < this->numberOfChannels; i++)
+		{
+			this->lowTHR[i]=millivolts;
+		}
+		return 0;
+	}
+	else
+	{
+
+		return -1;
+	}
 	return 0;
 }
 int HetPicSim::setPulse(int32_t value) {
 	return 0;
 }
-int HetPicSim::getLowThresholds(int32_t& lowthresholds) {
+int HetPicSim::getNumberOfChannel(int32_t& chanNum) {
+	chanNum=this->numberOfChannels;
 	return 0;
 }
-int HetPicSim::getHighThresholds(int32_t& highthresholds) {
+int HetPicSim::getStatus(int32_t& status) {
+	status= ::common::hetpic::HETPIC_OK;
 	return 0;
 }
-int HetPicSim::getTemperatures(double& temperature_0,double& temperature_1) {
+int HetPicSim::getHighThresholds(std::vector<int32_t>& highThresholds) {
+	highThresholds.clear();
+	for (int i=0; i < this->highTHR.size(); i++)
+	{
+		highThresholds.push_back(this->highTHR[i]);
+	}
+	return 0;
+}
+int HetPicSim::getLowThresholds(std::vector<int32_t>& lowThresholds) {
+	lowThresholds.clear();
+	for (int i=0; i < this->lowTHR.size(); i++)
+	{
+		lowThresholds.push_back(this->lowTHR[i]);
+	}
 	return 0;
 }
