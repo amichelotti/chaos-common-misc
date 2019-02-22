@@ -43,6 +43,7 @@ namespace common {
 				private:
 				uint32_t numberOfChannels;
 				int32_t internalStatus;
+				int32_t pulseValue;
 				std::vector<int32_t> lowTHR;
 				std::vector<int32_t> highTHR;
 			};//end class

@@ -24,7 +24,8 @@ namespace common {
 	namespace hetpic {
 		typedef enum {
 			HETPIC_OK = 0x1,
-			HETPIC_NOT_RESPONSIVE = 0x2			
+			HETPIC_NOT_RESPONSIVE = 0x2,
+			HETPIC_PULSING = 0x4			
 		} StatusPIC;
 		class AbstractHETPic {
 		  public:

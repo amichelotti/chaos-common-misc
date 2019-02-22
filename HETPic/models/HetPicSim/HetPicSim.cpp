@@ -27,6 +27,7 @@ using namespace common::hetpic::models;
 HetPicSim::HetPicSim(const std::string Parameters) {
 	this->numberOfChannels=32;
 	this->internalStatus=::common::hetpic::HETPIC_OK;
+	this->pulseValue=0;
 	for (int i=0; i < this->numberOfChannels; i++)
 	{
 		this->lowTHR.push_back(2);
@@ -37,6 +38,7 @@ HetPicSim::HetPicSim(const std::string Parameters) {
 HetPicSim::HetPicSim(const chaos::common::data::CDataWrapper &config) { 
 	this->numberOfChannels=32;
 	this->internalStatus=::common::hetpic::HETPIC_OK;
+	this->pulseValue=0;
 	for (int i=0; i < this->numberOfChannels; i++)
 	{
 		this->lowTHR.push_back(1);
@@ -89,6 +91,15 @@ int HetPicSim::SetLowThreshold(int32_t channel,int32_t millivolts) {
 	return 0;
 }
 int HetPicSim::setPulse(int32_t value) {
+	this->pulseValue=value;
+	if (this->pulseValue>0)
+	{
+		UPMASK(this->internalStatus,::common::hetpic::HETPIC_PULSING);
+	}
+	else
+	{
+		DOWNMASK(this->internalStatus,::common::hetpic::HETPIC_PULSING);
+	}
 	return 0;
 }
 int HetPicSim::getNumberOfChannel(int32_t& chanNum) {
@@ -98,6 +109,8 @@ int HetPicSim::getNumberOfChannel(int32_t& chanNum) {
 int HetPicSim::getStatus(int32_t& status) {
 	//DPRINT ("internal Status=%d",this->internalStatus);
 	UPMASK(this->internalStatus,::common::hetpic::HETPIC_OK);
+	
+	
 	status=this->internalStatus;
 	return 0;
 }
