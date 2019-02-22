@@ -42,6 +42,7 @@ namespace common {
 				int getLowThresholds(std::vector<int32_t>& lowThresholds);
 				private:
 				uint32_t numberOfChannels;
+				int32_t internalStatus;
 				std::vector<int32_t> lowTHR;
 				std::vector<int32_t> highTHR;
 			};//end class

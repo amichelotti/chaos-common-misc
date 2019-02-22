@@ -21,10 +21,12 @@ limitations under the License.
 #include <chaos/common/data/CDataWrapper.h>
 #endif
 #include "HetPicSim.h"
+#include <common/misc/utility/bitmaskUtils.h>
 using namespace common::hetpic;
 using namespace common::hetpic::models;
 HetPicSim::HetPicSim(const std::string Parameters) {
 	this->numberOfChannels=32;
+	this->internalStatus=::common::hetpic::HETPIC_OK;
 	for (int i=0; i < this->numberOfChannels; i++)
 	{
 		this->lowTHR.push_back(2);
@@ -34,6 +36,7 @@ HetPicSim::HetPicSim(const std::string Parameters) {
 #ifdef CHAOS
 HetPicSim::HetPicSim(const chaos::common::data::CDataWrapper &config) { 
 	this->numberOfChannels=32;
+	this->internalStatus=::common::hetpic::HETPIC_OK;
 	for (int i=0; i < this->numberOfChannels; i++)
 	{
 		this->lowTHR.push_back(1);
@@ -93,7 +96,9 @@ int HetPicSim::getNumberOfChannel(int32_t& chanNum) {
 	return 0;
 }
 int HetPicSim::getStatus(int32_t& status) {
-	status= ::common::hetpic::HETPIC_OK;
+	DPRINT ("internal Status=%d",this->internalStatus);
+	UPMASK(this->internalStatus,::common::hetpic::HETPIC_OK);
+	status=this->internalStatus;
 	return 0;
 }
 int HetPicSim::getHighThresholds(std::vector<int32_t>& highThresholds) {
