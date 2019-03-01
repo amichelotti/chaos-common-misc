@@ -18,6 +18,7 @@ limitations under the License.
 */
 #include <common/debug/core/debug.h>
 #ifdef CHAOS
+#include <common/misc/driver/ConfigDriverMacro.h>
 #include <chaos/common/data/CDataWrapper.h>
 #endif
 #include "SimGib.h"
@@ -38,6 +39,7 @@ SimGib::SimGib(const std::string Parameters) {
 	   adcChannels.push_back(0);
 	}
 }
+
 #ifdef CHAOS
 SimGib::SimGib(const chaos::common::data::CDataWrapper &config) { 
 	internalState=0;
@@ -51,23 +53,30 @@ SimGib::SimGib(const chaos::common::data::CDataWrapper &config) {
 	   pulsingWidth.push_back(0);
 	   adcChannels.push_back(0);
 	}
-	   
+	DPRINT("received init parameter %s ",config.getJSONString().c_str());
+	GET_PARAMETER_TREE((&config), device_param)
+	{
+		GET_PARAMETER(device_param, freezeDriverPercent, int32_t, 0);
+		if ((freezeDriverPercent) && (freezeDriverPercent < 100) && (freezeDriverPercent >= 0) )
+		{
+			freezeDriverPercentage=freezeDriverPercent;
+		}
+		else
+		{
+			freezeDriverPercentage=0;
+		}
+		
+	} 
 }
 #endif
 SimGib::~SimGib() {
 }
-/*int SimGib::init(void* conf) {
-	DPRINT("DRIVER SimGib::init");
-	internalState=12;
-	return 0;
-}*/
+
 int SimGib::deinit(void) {
 	return 0;
 }
 
-/*uint64_t SimGib::getFeatures() {
-	return 24;
-}*/
+
 int SimGib::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	DPRINT("Called SetPulse channel %d amlitude %d width %d state %d",channel,amplitude,width,state);
 	if (channel >= this->channels)

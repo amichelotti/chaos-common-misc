@@ -51,6 +51,7 @@ namespace common {
 				std::string DescribeState(int32_t state);
 				int internalState;
 				int32_t pulseStateMask;
+				int32_t freezeDriverPercentage;
 				std::vector<double> adcChannels;
 				std::vector<int32_t> pulsingAmplitudes;
 				std::vector<int32_t> pulsingWidth;

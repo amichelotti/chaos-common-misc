@@ -150,52 +150,6 @@ std::string getWriteCommand(int baseAddress, int offset, unsigned int value)
 
 
 
-/*const char* getCommandToWrite(int baseAddress,int chan,float value)
-{
-  int i,address,valint,zeroToAdd;
-  char* toRet,val[8];
-  char *tmp;
-  std::string  cppString="w";
-  if (value > 75.0f)
-  {
-     printf("Error voltage too high( > 75V))\n");
-     return strdup("");
-  }
-
-  toRet=(char*)malloc(sizeof(char)*32);
-  toRet[0]='w';
-  if (chan < 8) address=baseAddress + chan*4;
-  if ( (chan >7) && (chan < 16) ) address=baseAddress +0x100+((chan-8)*4);
-  if (chan>15)  address= baseAddress + 0x200 + ((chan-16)*4) ;
-  sprintf(val,"%x\0",address);
-  cppString+=val;
-  for (i=0; i< strlen(val);i++)
-  {
-    toRet[i+1]=val[i];
-  }
-  //value deve essere una stringa di 2,4,8 caratteri
-  //valint=(int)( (value -  63.75 )*2604.16);
-  valint=(int)( (value -  64 )*2604.16);
-  sprintf(val,"%x\0",valint);
-  zeroToAdd=8 - strlen(val);
-  
-  for (i=zeroToAdd; i > 0; i-- )
-  {
-     cppString+="0";
-    
-  }
-  tmp=toRet;
-  cppString+=val;
-  //toRet=appiccica_stringhe(2,toRet,val);
-  //free(tmp);
-  tmp=toRet;
-  cppString+="\r\n\0";
-  //toRet=appiccica_stringhe(2,toRet,"\r\n\0");
-  //free(tmp);
-  printf ("zeroToAdd is %d \n",zeroToAdd);
-  printf("cppString is %s  adding Value %x\n",cppString.c_str(),valint);
-  return cppString.c_str();
-}*/
 
 /*******************************************************************/
 int decodeReadString(char* buf)
@@ -567,7 +521,7 @@ int gibccaltDrv::PowerOn(int32_t on_state) {
   mysocket=OpenSocket(this->gibIP);
   if (mysocket < 0)
   {
-    return mysocket;
+    return GIB_UNREACHABLE;
   }
   else
   {
@@ -611,7 +565,7 @@ int gibccaltDrv::PowerOn(int32_t on_state) {
       DPRINT("Error Command not Acknowledged rc is %d\n",rc);
       close(mysocket);
       shutdown(mysocket,2);
-      return -2;
+      return -1;
     }
     close(mysocket);
     shutdown(mysocket,2);
