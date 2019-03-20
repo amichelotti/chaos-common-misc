@@ -19,8 +19,17 @@ limitations under the License.
 #ifndef __HETPic__HetPicTCPDriver__
 #define __HETPic__HetPicTCPDriver__
 #include <common/misc/HETPic/core/AbstractHETPic.h>
+#include <vector>
 #ifdef CHAOS
 #include <chaos/common/data/CDataWrapper.h>
+#endif
+#ifndef _WIN32
+#include <sys/socket.h>
+#include <sys/socketvar.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #endif
 namespace common {
 	namespace hetpic {
@@ -39,6 +48,13 @@ namespace common {
 				int getStatus(int32_t& status);
 				int getHighThresholds(std::vector<int32_t>& highThresholds);
 				int getLowThresholds(std::vector<int32_t>& lowThresholds);
+				void SetUp();
+				std::string IPaddress;
+				uint32_t numOfChannels;
+				std::vector<int32_t> highThr;
+				std::vector<int32_t> lowThr;
+				struct sockaddr_in server;
+				int mysocket;
 			};//end class
 		}//end namespace models
 	}//end namespace hetpic
