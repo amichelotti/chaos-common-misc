@@ -14,8 +14,10 @@ namespace data {
 */
 class Property {
   chaos::common::data::CDataWrapper props;
-  typedef void(*conversion_func_t)(void) ;
+  typedef chaos::common::data::CDataWrapper&(*conversion_func_t)(chaos::common::data::CDataWrapper&) ;
   std::map<std::string, std::string> abstract2props;
+  std::map<std::string, conversion_func_t> convertAbstract2Prop;
+  std::map<std::string, conversion_func_t> convertProp2Abstract;
 
  public:
 
@@ -29,10 +31,10 @@ class Property {
                       const std::string&  abstractname = "",conversion_func_t abstractWriter=NULL,conversion_func_t privateWriter=NULL);
   ChaosUniquePtr<chaos::common::data::CDataWrapper> setProperty(
       const std::string& propname,
-      ChaosUniquePtr<chaos::common::data::CDataWrapper> value);
+      ChaosUniquePtr<chaos::common::data::CDataWrapper>& value);
   template <typename T>
   chaos::common::data::CDataWrapper createProperty(
-      const std::string& propname, T value, const std::string& pubname = "") {
+      const std::string& propname, const T& value, const std::string& pubname = "") {
     chaos::common::data::CDataWrapper p;
     p.append("value", value);
 
@@ -83,9 +85,9 @@ class Property {
       std::map<std::string, std::string>::iterator i =
           abstract2props.find(propname);
       if (i != abstract2props.end()) {
-        if (props.hasKey(*i)) {
-          props.setValue(*i, p);
-          return props.getCSDataValue(*i);
+        if (props.hasKey(i->first)) {
+          props.setValue(i->first, p);
+          return props.getCSDataValue(i->first);
         }
       }
     } else {
@@ -98,15 +100,15 @@ class Property {
   }
   template <typename T>
   int getPropertyValue(const std::string& propname, T& value) {
-    if ((props.hasKey(propname)) && (props.isCDataWrapperValue(propname))) {
-      value = props.getCSDataValue(propname)->getValue("value");
+    if ((props.hasKey(propname.c_str())) && (props.isCDataWrapperValue(propname))) {
+      value = props.getCSDataValue(propname)->getValue<T>("value");
       return 0;
     }
     std::map<std::string, std::string>::iterator i =
         abstract2props.find(propname);
     if (i != abstract2props.end()) {
-              if(props.hasKey(*i)&&(props.isCDataWrapperValue(*i) ){
-        value = props.getCSDataValue(*i)->getValue("value");
+              if(props.hasKey(i->first)&&(props.isCDataWrapperValue(i->first)) ){
+        value = props.getCSDataValue(i->first)->getValue<T>("value");
         return 0;  
               }
     }
