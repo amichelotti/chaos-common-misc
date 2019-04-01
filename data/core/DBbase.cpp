@@ -174,6 +174,7 @@ int DBbase::setDBName(std::string _name){
 }
 int DBbase::setDBParameters(std::string key,std::string value){
 	kv_parameters[key]=value;
+	return 0;
 }
 
 

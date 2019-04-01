@@ -17,7 +17,7 @@ CheckConfigureBuild(memcached libmemcached "--with-pic;--disable-memaslap;--disa
 
 ENDIF()
 
-file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp)
+file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp)
 
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
@@ -26,6 +26,8 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${DRIVER_LIBS} jsoncpp common_debug boost_date_time)
 INSTALL_TARGETS(/lib  ${PROJECT_NAME})
 
+FILE(GLOB headers "core/*.h")
+INSTALL(FILES ${headers} DESTINATION include/common/misc/data/core)
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data)
 

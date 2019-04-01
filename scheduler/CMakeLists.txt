@@ -3,7 +3,7 @@ project(common_misc_scheduler)
 file (GLOB src *.cpp)
  INCLUDE_DIRECTORIES(. ../../..)
 
-
+ADD_DEFINITIONS(-fPIC)
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 
 
