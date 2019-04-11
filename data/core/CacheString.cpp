@@ -9,7 +9,7 @@ namespace misc
 {
 namespace data
 {
-CacheString::CacheString(const uint32_t size) : cache_size(size),hit(0),miss(0),query(0){
+CacheString::CacheString(const uint32_t size) : cache_size(size),hit(0),miss(0),query(0),expired(0){
     oldest=0;
 }
 uint64_t CacheString::getTimestamp(){
@@ -18,7 +18,7 @@ uint64_t CacheString::getTimestamp(){
     return current_date_microseconds.time_of_day().total_microseconds();
 
 }
-int CacheString::fetch(std::string &key){
+int CacheString::fetch(std::string &key,std::string &d){
     uint64_t now=getTimestamp();
     boost::uuids::string_generator str_gen;
     boost::uuids::uuid uid = str_gen(key);
@@ -28,12 +28,13 @@ int CacheString::fetch(std::string &key){
     query++;
     if(i!=m_cache.end()){
         
-        if((now-i->second.ts)>now-i->second.ttl){
+        if((now-i->second.ts)>i->second.ttl){
             
             m_cache.erase(i);
+            expired++;
             return 1;
         } else {
-            key=i->second.data;
+            d=i->second.data;
             hit++;
             return 0;
         }
@@ -76,7 +77,7 @@ void CacheString::clean(){
 
 }
 
-int CacheString::write(const std::string &key, uint32_t ttl ){
+int CacheString::write(const std::string &key,const std::string &d, uint32_t ttl ){
     boost::uuids::string_generator str_gen;
     boost::uuids::uuid uid = str_gen(key);
     
@@ -89,7 +90,7 @@ int CacheString::write(const std::string &key, uint32_t ttl ){
         oldest=now;
     }
     cache_ele_t ele;
-    ele.data=key;
+    ele.data=d;
     ele.ts=now;
     ele.ttl=ttl;
     boost::mutex::scoped_lock l(lock);
@@ -106,6 +107,12 @@ void CacheString::setMaxCache(uint32_t max_cache){
 uint32_t CacheString::size(){
     return m_cache.size();
 }
+std::string CacheString::cacheStats(){
+    std::stringstream ss;
+    ss<<"miss:"<<miss<<"("<<((query>0)?miss*100/query:0)<<" %) hits:"<<hit<<" ("<<((query>0)?hit*100/query:0)<<"%) expired:"<<expired<<" ("<<((query>0)?expired*100/query:0)<<"%)"<<" cache elems:"<<size();
+    return ss.str();
+}
+
 }; // namespace data
 } // namespace misc
 } // namespace common

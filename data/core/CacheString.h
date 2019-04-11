@@ -18,7 +18,7 @@ namespace common{
                 boost::mutex lock;
                 std::map<std::string,cache_ele_t> m_cache;
                 uint32_t cache_size;
-                uint32_t hit,miss,query;
+                uint32_t hit,miss,expired,query;
                 uint64_t getTimestamp();
                 uint64_t oldest;
                 void clean();
@@ -28,7 +28,7 @@ namespace common{
                  * Return the cache string corresponding to given key, wait if data not present or if ttlv expired
                  * @return 0, if found, 1 if expired, other if not found
                 */
-                int fetch(std::string&key);
+                int fetch(std::string&key,std::string&d);
                 /***
                  * Cache key status
                  * @return 0, if found, 1 if expired, other if not present
@@ -37,11 +37,12 @@ namespace common{
                 /**
                  * return the number of element in cache
                 */
-                int write(const std::string&src,uint32_t ttl=0);
+                int write(const std::string&src,const std::string&d,uint32_t ttl=0);
                 /**
                  * Set max element size
                 */
                 void setMaxCache(uint32_t max_cache);
+                std::string cacheStats();
                 /**
                  * return the number of elements
                 */

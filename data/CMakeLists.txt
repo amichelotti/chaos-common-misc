@@ -17,7 +17,7 @@ CheckConfigureBuild(memcached libmemcached "--with-pic;--disable-memaslap;--disa
 
 ENDIF()
 
-file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp)
+file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp core/CacheString.cpp)
 
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
