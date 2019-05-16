@@ -4,7 +4,9 @@
 namespace common  {
 namespace misc {
 namespace data {
-
+bool Property::hasKey(const std::string& key){
+    return props.hasKey(key);
+  }
     void Property::createProperty(const std::string&propname,ChaosUniquePtr<chaos::common::data::CDataWrapper> value,const std::string&pubname,conversion_func_t abstractWriter,conversion_func_t privateWriter){
             if(value.get()){
                 createProperty(propname,*value.get(),pubname);

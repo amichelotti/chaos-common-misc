@@ -20,8 +20,9 @@ class Property {
   std::map<std::string, conversion_func_t> convertProp2Abstract;
 
  public:
-
+  void reset(){props.reset();}
   chaos::common::data::CDataWrapper getProperty();
+  bool hasKey(const std::string& key);
   // between public and private properties 
   void createProperty(const std::string& propname,
                       ChaosUniquePtr<chaos::common::data::CDataWrapper> value,
@@ -46,7 +47,7 @@ class Property {
       props.append(propname, p);
 
     } else {
-      props.setValue(propname, p);
+      props.setValue(propname, &p);
     }
 
     return p;
@@ -70,7 +71,7 @@ class Property {
       props.append(propname, p);
 
     } else {
-      props.setValue(propname.c_str(), p);
+      props.setValue(propname, &p);
     }
 
     return p;
@@ -86,7 +87,7 @@ class Property {
           abstract2props.find(propname);
       if (i != abstract2props.end()) {
         if (props.hasKey(i->first)) {
-          props.setValue(i->first, p);
+          props.setValue(i->first, &p);
           return props.getCSDataValue(i->first);
         }
       }
