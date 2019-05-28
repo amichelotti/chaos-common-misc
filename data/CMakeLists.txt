@@ -31,12 +31,12 @@ INSTALL(FILES ${headers} DESTINATION include/common/misc/data/core)
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data)
 
+IF(COMMON_TEST)
+ADD_EXECUTABLE(test_db test/test_db.cpp)
 
-#ADD_EXECUTABLE(test_db test/test_db.cpp)
+TARGET_LINK_LIBRARIES(test_db ${PROJECT_NAME} common_debug boost_program_options boost_system boost_thread ${FrameworkLib} pthread)
+INSTALL_TARGETS(/bin test_db)
 
-#TARGET_LINK_LIBRARIES(test_db ${PROJECT_NAME} common_debug boost_program_options boost_system boost_thread ${FrameworkLib} pthread)
-#INSTALL_TARGETS(/bin test_db)
+ install(DIRECTORY DESTINATION include/driver/daq)  
 
-# install(DIRECTORY DESTINATION include/driver/daq)  
-
-
+ENDIF()
