@@ -1,6 +1,6 @@
 #include "HttpSender.h"
 #include <boost/asio.hpp>
-#include <stdint.h>
+
 using boost::asio::ip::tcp;
 
 general::utility::HTTPResponse::HTTPResponse()
