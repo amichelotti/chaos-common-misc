@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.9)
-project(common_misc)
+project(common_misc_utility)
 include_directories({$chaos_INCLUDE_DIRS})
 SET(httpsender_lib_src   HttpSender.cpp)
 IF (BUILD_FORCE_STATIC)
@@ -9,4 +9,6 @@ ADD_LIBRARY(${PROJECT_NAME} SHARED ${httpsender_lib_src})
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} boost_system)
 FILE(GLOB files "HttpSender.h")
+
+INSTALL_TARGETS(/lib  ${PROJECT_NAME})
 INSTALL(FILES ${files} DESTINATION include/common/misc/utility)
