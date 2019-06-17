@@ -16,8 +16,11 @@ SchedTimeElem::SchedTimeElem(const std::string& uid,int prio):SchedBasicElem(uid
 	quantum=0;
 }
 bool SchedTimeElem::hasToSched(uint64_t t){
-	if((t-last_sched)>=quantum)
+	dynPrio=(t-last_sched);
+
+	if((t-last_sched)>=quantum){
 		return true;
+	}
 	return false;
 }
 SchedTimeElem::~SchedTimeElem() {
