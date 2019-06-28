@@ -19,7 +19,7 @@ class SchedTimeElem :public SchedBasicElem{
 public:
 	SchedTimeElem(const std::string& uid,int prio=0);
 	virtual ~SchedTimeElem();
-	void setQuantum(uint64_t quanto );
+	void setQuantum(uint64_t usquanto );
 	uint64_t getQuantum();
 	bool hasToSched(uint64_t t);
 
