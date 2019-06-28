@@ -37,8 +37,9 @@ void Scheduler::sched_task(){
 		for(i=v_sched_elem.begin();i!=v_sched_elem.end();i++){
 			uint64_t st=common::debug::getUsTime();
 			if((*i)->hasToSched(st)){
-			//	DPRINT("schedule elem \"%s\" prio:%d",(*i)->getUid().c_str(),(*i)->dynPrio);
-				waitmin=std::min(waitmin,(*i)->sched(st));
+				uint64_t next_sched=(*i)->sched(st);
+				waitmin=std::min(waitmin,next_sched);
+				DPRINT("scheduled elem \"%s\" prio:%d next sched %llu us, minimum schedule %llu us",(*i)->getUid().c_str(),(*i)->dynPrio,next_sched,waitmin);
 				(*i)->last_sched=st;
 			}
 
