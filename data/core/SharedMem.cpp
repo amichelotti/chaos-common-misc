@@ -90,7 +90,7 @@ size_t SharedMem::getSize(){
 int SharedMem::writeMsg(void*ptr,size_t size){
     bip::scoped_lock<bip::named_mutex> lk(*mx.get());
     uint32_t *p=(uint32_t*)region->get_address();
-    if(p && (region->get_size()<size)){
+    if(p && (size<(region->get_size()-sizeof(uint32_t)))){
         *p++=size;
         memcpy(p,ptr,size);
         return size;
