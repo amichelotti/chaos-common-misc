@@ -1,5 +1,6 @@
 #include "SharedMem.h"
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/thread/thread_time.hpp>
 
 
 namespace common  {
@@ -45,9 +46,21 @@ void SharedMem::notify_all(){
     bip::scoped_lock<bip::named_mutex> lk(*mx.get());
     cv->notify_all();
 }
-void SharedMem::wait(){
+int SharedMem::wait(uint32_t timeoms){
     bip::scoped_lock<bip::named_mutex> lk(*mx.get());
-    cv->wait(lk);
+    
+    if(timeoms>0){
+        boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(timeoms);
+
+        if(cv->timed_wait(lk,timeout)==false){
+            //timeout
+            return -100;
+        }
+    } else {
+        cv->wait(lk);
+    }
+    return 0;
+        
 }
 int SharedMem::write(const char*src,size_t size){
     bip::scoped_lock<bip::named_mutex> lk(*mx.get());
@@ -96,6 +109,21 @@ int SharedMem::writeMsg(void*ptr,size_t size){
             
         }
         return ret;
+  }
+  size_t SharedMem::readMsg(uint8_t**ptr){
+      size_t ret=0;
+    if(ptr){
+        *ptr=NULL;
+    }
+    bip::scoped_lock<bip::named_mutex> lk(*mx.get());
+        uint32_t *p=(uint32_t*)region->get_address();
+        if(p && (p[0]<region->get_size())){
+            ret=p[0];
+            if(ptr){
+                *ptr=(uint8_t*)&p[1];
+            }
+        }
+    return ret;
   }
 
     
