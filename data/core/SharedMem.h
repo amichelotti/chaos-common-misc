@@ -25,6 +25,8 @@ class SharedMem {
   * If size >0 the create a new shared mem, otherwise expects created.
  */
   SharedMem(const std::string& name,size_t size=0);
+  ~SharedMem();
+
   /*
     resize shared memory
   */
