@@ -11,11 +11,12 @@ namespace misc {
 namespace data {
 namespace bip   = boost::interprocess;
 
-
+#define TIMEOUT_TO_ATTACH_SHARED 60000
 class SharedMem {
   std::auto_ptr<bip::shared_memory_object> shared_obj;
   std::auto_ptr<bip::mapped_region> region;
   std::auto_ptr<bip::named_mutex> mx;
+  std::auto_ptr<bip::named_mutex> wait_lock;
   std::auto_ptr<bip::named_condition> cv;
   bool server;
   size_t msize;
