@@ -39,7 +39,7 @@ void Scheduler::sched_task(){
 			if((*i)->hasToSched(st)){
 				uint64_t next_sched=(*i)->sched(st);
 				waitmin=std::min(waitmin,next_sched);
-				DPRINT("scheduled elem \"%s\" prio:%d next sched %llu us, minimum schedule %llu us",(*i)->getUid().c_str(),(*i)->dynPrio,next_sched,waitmin);
+				//DPRINT("scheduled elem \"%s\" prio:%d next sched %llu us, minimum schedule %llu us",(*i)->getUid().c_str(),(*i)->dynPrio,next_sched,waitmin);
 				(*i)->last_sched=st;
 			}
 

@@ -17,7 +17,26 @@ CheckConfigureBuild(memcached libmemcached "--with-pic;--disable-memaslap;--disa
 
 ENDIF()
 
-file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp core/CacheString.cpp)
+
+IF(GPUFIT)
+ExternalProject_Add(
+  GpuFit
+  GIT_REPOSITORY https://github.com/gpufit/Gpufit.git
+  GIT_TAG master
+  PREFIX "${CMAKE_BINARY_DIR}/ext_dep/gpufit"
+  SOURCE_DIR "${CMAKE_BINARY_DIR}/ext_dep/gpufit-src"
+  BINARY_DIR "${CMAKE_BINARY_DIR}/ext_dep/gpufit-src"
+  CMAKE_ARGS  -DBUILD_SHARED_LIBS=ON
+                -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+  LOG_DOWNLOAD ON
+  LOG_CONFIGURE ON
+  LOG_BUILD ON)
+  # add definition for compilation
+add_definitions(-DGPUFIT)
+MESSAGE(STATUS "Enabling GPUFIT")
+ENDIF()
+
+file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp core/CacheString.cpp core/SharedMem.cpp)
 
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
