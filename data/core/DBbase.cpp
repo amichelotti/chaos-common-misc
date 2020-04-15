@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream& out,blobRecord_t& ret){
 				out<<",";
 			}
 			out<<"\"ts\":\""<<boost::posix_time::to_simple_string(now)<<"\"";
-			DPRINT("%s date:%s ts:%lu",ret[cnt].key.c_str(),boost::posix_time::to_simple_string(now).c_str(),ret[cnt].timestamp);
+			DPRINT("%s date:%s ts:%llu",ret[cnt].key.c_str(),boost::posix_time::to_simple_string(now).c_str(),ret[cnt].timestamp);
 		}
 
 		if(_data_::format&0x4){
@@ -68,7 +68,7 @@ int64_t convertToEpoch(const std::string& ts){
 	boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
 	boost::posix_time::ptime pts=boost::posix_time::time_from_string(ts);
 	ret=(pts-time_epoch).total_milliseconds();
-	DPRINT("conversion %s = %ld",ts.c_str(),ret);
+	DPRINT("conversion %s = %lld",ts.c_str(),ret);
 	return ret;
 
 }
