@@ -3,4 +3,4 @@ add_subdirectory(SimGib)
 add_subdirectory(gibccaltDrv)
 SET(DRIVERS_LIB ${DRIVERS_LIB} PARENT_SCOPE)
 
-#INSTALL_TARGETS(/lib ${PROJECT_NAME})
+
