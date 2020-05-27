@@ -17,4 +17,6 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} cassandra_static uv common_misc_data common_debug ${libs} boost_log boost_system boost_thread)
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/data/cassandra)
-INSTALL_TARGETS(/lib ${PROJECT_NAME})
+INSTALL(TARGETS ${PROJECT_NAME}
+        DESTINATION "lib"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
