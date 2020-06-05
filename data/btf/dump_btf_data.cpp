@@ -59,7 +59,7 @@ int main(int argc,char**argv){
         printf("## no key found \"%s\"\n",key);
         return -3;
     }
-    printf("acquisition %llu\n",btf->acquisition);
+    printf("acquisition %lu\n",btf->acquisition);
     return 0;
   
 }
