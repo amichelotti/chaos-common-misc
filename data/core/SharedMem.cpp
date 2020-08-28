@@ -33,8 +33,10 @@ SharedMem::~SharedMem()
 }
 SharedMem::SharedMem(const std::string &name, size_t siz) : msize(0)
 {
-    _name = name + "_mem";
-    boost::replace_all(_name, "/", "_");
+    std::string tmpname;
+    tmpname = name + "_mem";
+    boost::replace_all(tmpname, "/", "_");
+    _name=tmpname ;
     std::string mtxname = _name + "_mtx";
     std::string wmtxname = _name + "_wait_mtx";
     std::string cvname = _name + "_cv";
@@ -160,6 +162,22 @@ std::auto_ptr<uint8_t> SharedMem::readMsg()
     }
     return ret;
 }
+std::vector<uint8_t> SharedMem::read(){
+    uint8_t* bufs;
+    size_t siz;
+        
+    bip::scoped_lock<bip::named_mutex> lk(*mx.get());
+    uint32_t *p = (uint32_t *)region->get_address();
+    bufs=(uint8_t*)&p[1];
+    siz=p[0];
+    if (p && (p[0] < region->get_size()))
+    {
+        return std::vector<uint8_t>((uint8_t *)bufs, bufs + siz);
+
+    }
+    return std::vector<uint8_t>();
+}
+
 size_t SharedMem::readMsg(uint8_t **ptr)
 {
     size_t ret = 0;
