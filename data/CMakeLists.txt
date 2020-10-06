@@ -36,7 +36,7 @@ add_definitions(-DGPUFIT)
 MESSAGE(STATUS "Enabling GPUFIT")
 ENDIF()
 
-file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/Property.cpp core/CacheString.cpp core/SharedMem.cpp)
+file (GLOB src core/DataSet.cpp core/DBbase.cpp core/DBbaseFactory.cpp core/CacheString.cpp core/SharedMem.cpp)
 
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
