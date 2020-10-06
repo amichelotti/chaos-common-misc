@@ -13,4 +13,7 @@ ADD_EXECUTABLE(dump_btf_data ${src})
 TARGET_LINK_LIBRARIES(dump_btf_data memcached m)
 #FILE(GLOB headers "core/*.h")
 #INSTALL(FILES ${headers} DESTINATION include/common/core/debug)
-INSTALL_TARGETS(/bin dump_btf_data)
+
+INSTALL(TARGETS dump_btf_data 
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

@@ -5,7 +5,7 @@
 #include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
-
+#include <vector>
 namespace common {
 namespace misc {
 namespace data {
@@ -60,6 +60,7 @@ class SharedMem {
    * return size and pointer of the message (without copy)
   */
   size_t readMsg(uint8_t**ptr);
+  std::vector<uint8_t> read();
 
   int write(const char*src,size_t size);
   int read( char*dst,size_t size);
