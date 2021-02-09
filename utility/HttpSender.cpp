@@ -148,8 +148,10 @@ general::utility::HTTPResponse general::utility::HTTPClient::SendHttpPost(std::s
 		}
 		catch (std::exception eccezione)
 		{
+			std::stringstream ss;
+			ss<<"Failed to connect to endpoint:"<<eccezione.what();
 			Resp.ReturnCode = 404;
-			Resp.ReturnMessage = "Failed to connect to endpoint";
+			Resp.ReturnMessage = ss.str();
 			Resp.PayloadAnswer = "";
 			return Resp;
 		}
