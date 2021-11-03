@@ -157,7 +157,7 @@ int SimGib::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t
 }
 int SimGib::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V)
 {
-	std::srand(std::time(nullptr));
+	std::srand(std::time(NULL));
 	
 	double noise=(double) ((std::rand() % 10)-5) / 10;
 	*P5V=5+noise;
