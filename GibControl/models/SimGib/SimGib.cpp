@@ -147,6 +147,8 @@ int SimGib::getVoltages(std::vector<double>& vec )
 }
 
 int SimGib::getNumOfChannels(int32_t* numOfChannels) {
+	DPRINT("ALEDEBUG Number of channels of this driver: %d",this->channels);
+	
 	*numOfChannels = this->channels;
 	return 0;
 }
