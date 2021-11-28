@@ -22,7 +22,7 @@ int CacheString::fetch(std::string &key,std::string &d){
     uint64_t now=getTimestamp();
     boost::uuids::string_generator str_gen;
     boost::uuids::uuid uid = str_gen(key);
-    boost::mutex::scoped_lock l(lock);
+    boost::lock_guard<boost::mutex> l(lock);
 
     std::map<std::string,cache_ele_t>::iterator i=m_cache.find(boost::uuids::to_string(uid));
     query++;
@@ -64,7 +64,7 @@ void CacheString::clean(){
     uint64_t limit=(now-oldest)/2;
     oldest=limit;
     std::map<std::string,cache_ele_t>::iterator i;
-    boost::mutex::scoped_lock l(lock);
+   boost::lock_guard<boost::mutex> l(lock);
 
     for(i=m_cache.begin();i!=m_cache.end();){
         if(i->second.ts<limit){
@@ -93,7 +93,7 @@ int CacheString::write(const std::string &key,const std::string &d, uint32_t ttl
     ele.data=d;
     ele.ts=now;
     ele.ttl=ttl;
-    boost::mutex::scoped_lock l(lock);
+   boost::lock_guard<boost::mutex> l(lock);
     m_cache[boost::uuids::to_string(uid)]=ele;
     return m_cache.size();
 }
