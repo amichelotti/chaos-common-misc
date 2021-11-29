@@ -22,7 +22,7 @@ private:
 
 	static std::map< std::string,DBbase* > instances;
 
-	static boost::mutex mutex;
+	static ChaosMutex mutex;
 
 	public:
 	static DBbase* getInstance(const std::string&type,const std::string& name );

@@ -12,14 +12,14 @@
 namespace common {
 namespace misc {
 namespace data {
-boost::mutex DBbaseFactory::mutex;
+ChaosMutex DBbaseFactory::mutex;
 
 
 std::map<std::string,DBbase*> DBbaseFactory::instances;
 
  DBbase* DBbaseFactory::getInstance(const std::string& type,const std::string& name )
 {
-			boost::mutex::scoped_lock l(mutex);
+			ChaosLockGuard l(mutex);
 			typename std::map<std::string,  DBbase*>::iterator i=instances.find(name);
 			if(i!=instances.end()){
 				return (i->second);
