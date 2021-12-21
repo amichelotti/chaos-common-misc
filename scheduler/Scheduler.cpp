@@ -29,7 +29,7 @@ void Scheduler::sched_task(){
 
 		std::sort(v_sched_elem.begin(),v_sched_elem.end(),schedElemCompare);
 	/*	{
-			std::string th=boost::lexical_cast<std::string>(m_thread.get_id());
+			std::string th=ChaosToString(m_thread.get_id());
 
 			DPRINT("[%s] scheduling %ld elems.",th.c_str(),v_sched_elem.size());
 		}
@@ -51,7 +51,11 @@ void Scheduler::sched_task(){
 			schedule_avg= (1.0*accum)/npoints;
 		//	DPRINT("tot sched time %f ms, avg %f ms points %d",1.0*res/1000.0, schedule_avg/1000.0,npoints)
 		} else{
-			std::string th=boost::lexical_cast<std::string>(m_thread.get_id());
+			std::string th;
+			 std::ostringstream oss;
+  			oss << m_thread.get_id();
+
+			th=oss.str();
 			DPRINT("[%s] scheduled %ld elems average %f ms",th.c_str(),v_sched_elem.size(),schedule_avg/1000.0);
 			accum=0;
 			npoints=0;
