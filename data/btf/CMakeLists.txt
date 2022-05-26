@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.9)
 project(common_misc_data_btf)
 ADD_DEFINITIONS( -fno-rtti -fno-exceptions)
 SET(src dump_btf_data.cpp )

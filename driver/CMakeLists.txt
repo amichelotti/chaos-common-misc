@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.9)
 project(common_misc_driver)
 FILE(GLOB headers "*.h")
 INSTALL(FILES ${headers} DESTINATION include/common/misc/driver)
