@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 2.9)
 project(common_misc_utility)
 include_directories({$chaos_INCLUDE_DIRS})
 SET(httpsender_lib_src   HttpSender.cpp)

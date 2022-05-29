@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9)
 project(common_misc_data)
 option(CASSANDRA_DRIVER "enable support for cassandra" OFF)
 

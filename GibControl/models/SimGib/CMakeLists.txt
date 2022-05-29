@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9)
 project(common_gibcontrol_SimGib)
 find_package(chaos)
 ADD_DEFINITIONS(-DDEBUG -fpermissive)
