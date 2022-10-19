@@ -7,7 +7,7 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${httpsender_lib_src})
 ELSE()
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${httpsender_lib_src})
 ENDIF()
-# TARGET_LINK_LIBRARIES(${PROJECT_NAME} boost_system)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} boost_system)
 FILE(GLOB files "HttpSender.h")
 
 
