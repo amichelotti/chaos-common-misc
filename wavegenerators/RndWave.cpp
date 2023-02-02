@@ -4,13 +4,13 @@
  * 
  * Created on November 25, 2015, 9:21 AM
  */
-#include <boost/regex.hpp>
+#include <regex>
 
 #include "RndWave.h"
 #include <string>
 #include <stdlib.h>
 using namespace common::misc::wavegenerators;
-static boost::regex params("([-\\.\\d]+):([-\\.\\d]+)");
+static std::regex params("([-\\.\\d]+):([-\\.\\d]+)");
 
 RndWave::RndWave() {
     max=min=0;
@@ -25,9 +25,9 @@ RndWave::~RndWave() {
 
   
 int RndWave::init(const std::string& par){
-    boost::smatch match;
+    std::smatch match;
     
-    if(boost::regex_match(par,match,params,boost::match_extra)){
+    if(std::regex_match(par,match,params)){
         std::string smin=match[1];
         std::string smax=match[2];
         min=atof(smin.c_str());
