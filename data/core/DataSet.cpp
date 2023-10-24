@@ -49,7 +49,7 @@ void* DataSet::addInt(const std::string& name,dataTypes type,void*pnt,int size,i
 	if(elem_by_name.find(name)!=elem_by_name.end())
 	  return 0;
 
-	DatasetElement_psh ds = boost::shared_ptr<DatasetElement>(new DatasetElement);
+	DatasetElement_psh ds = std::shared_ptr<DatasetElement>(new DatasetElement);
 	ds->size = size;
 	ds->name =name;
 	ds->type=type;

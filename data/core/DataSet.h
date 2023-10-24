@@ -12,8 +12,9 @@
 #include <map>
 #include <stdint.h>
 #include <common/debug/core/debug.h>
-#include <boost/shared_ptr.hpp>
 #include <stddef.h>
+#include <memory>
+
 namespace common  {
 namespace misc {
 namespace data {
@@ -57,7 +58,7 @@ std::ostream& operator<<(std::ostream& in,const DatasetElement&ds);
 
 class DataSet {
 public:
-	typedef boost::shared_ptr<DatasetElement> DatasetElement_psh;
+	typedef std::shared_ptr<DatasetElement> DatasetElement_psh;
 protected:
 
 	std::vector<DatasetElement_psh> elems;
